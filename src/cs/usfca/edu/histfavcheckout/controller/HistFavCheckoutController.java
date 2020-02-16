@@ -1,7 +1,6 @@
 package cs.usfca.edu.histfavcheckout.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,19 +13,19 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/")
 public class HistFavCheckoutController {
 	
-	@GetMapping(value = "/ping", consumes = MediaType.TEXT_PLAIN_VALUE)
+	@GetMapping(value = "/ping")
 	@ResponseBody()
 	public ResponseEntity<?> ping() {
 		return ResponseEntity.status(HttpStatus.OK).body("Pong");
 	}
 	
-	@GetMapping(value = "/getTopFavs", consumes = "application/json")
+	@GetMapping(value = "/getTopFavs")
 	@ResponseBody()
 	public ResponseEntity<?> getTopFavs(@RequestParam int start, @RequestParam int nums) {
 		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
 	}
 
-	@GetMapping(value = "/getTopRated", consumes = "application/json")
+	@GetMapping(value = "/getTopRated")
 	@ResponseBody()
 	public ResponseEntity<?> getTopRated(@RequestParam int start, @RequestParam int nums) {
 		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
