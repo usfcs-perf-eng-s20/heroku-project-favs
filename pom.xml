@@ -10,6 +10,7 @@
   <artifactId>HistFavCheckout</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <build>
+  	<sourceDirectory>src</sourceDirectory>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -21,7 +22,17 @@
       </plugin>
       <plugin>
 		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-maven-plugin</artifactId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <configuration>
+              <mainClass>cs.usfca.edu.histfavcheckout.HistFavCheckout</mainClass>
+          </configuration>
+          <executions>
+              <execution>
+                  <goals>
+                      <goal>repackage</goal>
+                  </goals>
+              </execution>
+          </executions>
       </plugin>
     </plugins>
   </build>
