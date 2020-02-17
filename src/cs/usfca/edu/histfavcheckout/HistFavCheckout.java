@@ -3,7 +3,10 @@ package cs.usfca.edu.histfavcheckout;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+@SpringBootApplication 
+@EnableSwagger2
 public class HistFavCheckout {
 	public static void main(String[] args) {
 		SpringApplication.run(HistFavCheckout.class, args);
