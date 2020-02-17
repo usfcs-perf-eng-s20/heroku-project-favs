@@ -22,16 +22,6 @@ public class SwaggerConfig {
           .select()                                  
           .apis(RequestHandlerSelectors.basePackage("cs.usfca.edu.histfavcheckout.controller"))              
           .paths(PathSelectors.regex("/.*"))                          
-          .build().apiInfo(apiEndPointsInfo());                                           
-    }
-	
-    private ApiInfo apiEndPointsInfo() {
-        return new ApiInfoBuilder().title("Spring Boot REST API")
-            .description("Faves Team - Video Rentals API")
-            .contact(new Contact("Sope Ogundipe", "", "mogundipe@dons.usfca.edu"))
-            .license("Apache 2.0")
-            .licenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html")
-            .version("1.0.0")
-            .build();
+          .build();                                           
     }
 }
