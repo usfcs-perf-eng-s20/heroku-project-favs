@@ -1,25 +1,28 @@
 package cs.usfca.edu.histfavcheckout.model;
 
-import java.sql.Date;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+
+import org.springframework.data.annotation.Id;
 
 @Entity
+@Table(name = "UserEntity")
 public class User {
 	@EmbeddedId
+	@Id
     private PrimaryKey id;
 	@Column(nullable = false)
 	private boolean favourites = false;
 	@Column(nullable = false)
 	private boolean checkouts = false;
-	@Column
-	@Min(1)
+	@Column(nullable = true)
 	@Max(5)
 	private int rating;  
 	@Temporal(TemporalType.DATE)

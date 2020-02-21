@@ -2,12 +2,14 @@ package cs.usfca.edu.histfavcheckout.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -23,6 +25,9 @@ import io.swagger.annotations.ApiResponses;
 @RequestMapping("/")
 @Api(value = "Video Rental System", description = "APIs owned by the Faves Team")
 public class HistFavCheckoutController {
+	
+	@Autowired
+	HistFavCheckoutHandler handler = new HistFavCheckoutHandler();
 	
 	@ApiOperation(value = "Check if System is alive", response = String.class)
     @ApiResponses(value = {
@@ -151,12 +156,12 @@ public class HistFavCheckoutController {
 	@GetMapping(value = "/user")
 	@ResponseBody()
 	public ResponseEntity<?> getUser(@RequestParam int userId) {
-		return ResponseEntity.status(HttpStatus.OK).body(HistFavCheckoutHandler.getUser(userId));
+		return ResponseEntity.status(HttpStatus.OK).body(handler.getUser(userId));
 	}
 	
 	@PostMapping(value = "/user")
 	@ResponseBody()
-	public ResponseEntity<?> postUser(@RequestParam int userId, @RequestParam int productId) {
-		return ResponseEntity.status(HttpStatus.OK).body(HistFavCheckoutHandler.addUser(new PrimaryKey(userId, productId)));
+	public ResponseEntity<?> postUser(@RequestBody PrimaryKey id) {
+		return ResponseEntity.status(HttpStatus.OK).body(handler.addUser(id));
 	}
 }

@@ -1,10 +1,15 @@
 package cs.usfca.edu.histfavcheckout.model;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class PrimaryKey {
+public class PrimaryKey implements Serializable {
+	
+	public PrimaryKey() {}
+	
 	@Column(name="userId", nullable = false)
     private int userId;
 
