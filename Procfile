@@ -1,1 +1,1 @@
-web: java -Dspring.datasource.url=jdbc:postgresql:ec2-184-72-235-159.compute-1.amazonaws.com:5432/dca6ml2rsl8jk0?sslmode=require -Dserver.port=$PORT $JAVA_OPTS -jar target/HistFavCheckout-0.0.1-SNAPSHOT.jar 
+web: java -Dspring.datasource.url=postgres://ebytmpgijqsuue:302c16f065e3e59ec1d3f7ce497621a0dc9b0c68db3e15f9c43706c4a659394a@ec2-184-72-235-159.compute-1.amazonaws.com:5432/dca6ml2rsl8jk0 -Dserver.port=$PORT $JAVA_OPTS -jar target/HistFavCheckout-0.0.1-SNAPSHOT.jar 
