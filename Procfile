@@ -1,1 +1,1 @@
-web: java -Dserver.port=$PORT $JAVA_OPTS -jar target/HistFavCheckout-0.0.1-SNAPSHOT.jar
+web: java -Dspring.datasource.url=jdbc:postgresql:ec2-184-72-235-159.compute-1.amazonaws.com:5432 -Dserver.port=$PORT $JAVA_OPTS -jar target/HistFavCheckout-0.0.1-SNAPSHOT.jar 
