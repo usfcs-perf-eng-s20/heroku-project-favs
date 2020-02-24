@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
+import cs.usfca.edu.histfavcheckout.model.Product;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -176,6 +177,18 @@ public class HistFavCheckoutController {
 	@PostMapping(value = "/inventory")
 	@ResponseBody()
 	public ResponseEntity<?> postInventory(@RequestBody Inventory inventory) {
-		return ResponseEntity.status(HttpStatus.OK).body(handler.addInventory(inventory));
+		return handler.addInventory(inventory);
+	}
+	
+	@GetMapping(value = "/movie")
+	@ResponseBody()
+	public ResponseEntity<?> getMovie(@RequestParam int movieId) {
+		return handler.getMovie(movieId);
+	}
+	
+	@PostMapping(value = "/movie")
+	@ResponseBody()
+	public ResponseEntity<?> postMovie(@RequestBody Product movie) {
+		return handler.addMovie(movie);
 	}
 }

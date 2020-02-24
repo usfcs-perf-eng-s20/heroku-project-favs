@@ -41,8 +41,12 @@ public class HistFavCheckoutHandler {
 		return userRepository.findUserWithUserId(userId, Sort.by("id.productId"));
 	}
 	
-	public Inventory addInventory(Inventory inventory) {
-		return inventoryRepository.save(inventory);
+	public ResponseEntity<?> addInventory(Inventory inventory) {
+		Optional<Product> product = productRepository.findById(inventory.getProductId());
+		if(!product.isPresent()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Request unsuccessful. Invalid movie Id.");
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(inventoryRepository.save(inventory));
 	}
 	
 	public ResponseEntity<?> getInventory(int movieId) {
@@ -53,6 +57,22 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(inv.get());
 	}
 
+	public ResponseEntity<?> addMovie(Product movie) {
+		Optional<Product> product = productRepository.findById(movie.getId());
+		if(product.isPresent()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie has been added previously.");
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(productRepository.save(movie));
+	}
+	
+	public ResponseEntity<?> getMovie(int movieId) {
+		Optional<Product> product = productRepository.findById(movieId);
+		if(!product.isPresent()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie does not exist!");
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(product.get());
+	}
+	
 	public ResponseEntity<?> checkout(int userId, int movieId) {
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
 		if(!inventory.isPresent()) {
