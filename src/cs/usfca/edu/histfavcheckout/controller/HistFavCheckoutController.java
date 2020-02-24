@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
+import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -21,7 +23,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-@Controller
+@RestController
 @RequestMapping("/")
 @Api(value = "Video Rental System", description = "APIs owned by the Faves Team")
 public class HistFavCheckoutController {
@@ -148,9 +150,9 @@ public class HistFavCheckoutController {
     })
 	@PutMapping(value = "/checkOutMovies")
 	@ResponseBody()
-	public ResponseEntity<?> checkedOutMovies(@ApiParam(value = "id of user", required = true) @RequestParam int userId, 
+	public ResponseEntity<?> checkOutMovies(@ApiParam(value = "id of user", required = true) @RequestParam int userId, 
 			@ApiParam(value = "id of movie", required = true) @RequestParam int movieId) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+		return handler.checkout(userId, movieId);
 	}
 	
 	@GetMapping(value = "/user")
@@ -163,5 +165,17 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> postUser(@RequestBody PrimaryKey id) {
 		return ResponseEntity.status(HttpStatus.OK).body(handler.addUser(id));
+	}
+	
+	@GetMapping(value = "/inventory")
+	@ResponseBody()
+	public ResponseEntity<?> getInventory(@RequestParam int movieId) {
+		return handler.getInventory(movieId);
+	}
+	
+	@PostMapping(value = "/inventory")
+	@ResponseBody()
+	public ResponseEntity<?> postInventory(@RequestBody Inventory inventory) {
+		return ResponseEntity.status(HttpStatus.OK).body(handler.addInventory(inventory));
 	}
 }
