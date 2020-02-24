@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	public List<User> findUserWithUserId(@Param("userId") int userId, Sort sort);
 	
 	@Modifying
-	@Query("UPDATE User u SET u.checkouts = :checkouts AND u.expectedReturnDate = :expectedReturnDate WHERE u.id = :id")
+	@Query("UPDATE User u SET u.checkouts = :checkouts, u.expectedReturnDate = :expectedReturnDate WHERE u.id = :id")
 	public int updateCheckoutDetails(@Param("checkouts") boolean checkout, @Param("expectedReturnDate") Date expectedReturnDate, 
 			@Param("id") PrimaryKey id);
 }
