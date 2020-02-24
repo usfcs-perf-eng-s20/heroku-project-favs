@@ -3,6 +3,8 @@ package cs.usfca.edu.histfavcheckout.model;
 import java.util.Date;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,6 +18,7 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	@Query("SELECT u FROM User u WHERE u.id.userId= :userId")
 	public List<User> findUserWithUserId(@Param("userId") int userId, Sort sort);
 	
+	@Transactional
 	@Modifying
 	@Query("UPDATE User u SET u.checkouts = :checkouts, u.expectedReturnDate = :expectedReturnDate WHERE u.id = :id")
 	public int updateCheckoutDetails(@Param("checkouts") boolean checkout, @Param("expectedReturnDate") Date expectedReturnDate, 
