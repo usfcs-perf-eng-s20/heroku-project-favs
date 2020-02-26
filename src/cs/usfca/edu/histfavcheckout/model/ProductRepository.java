@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
-	@Query("SELECT p FROM Product p ORDER BY p.numberOfFavorites DESC LIMIT :threshold")
+	@Query("SELECT p FROM Product as p ORDER BY p.numberOfFavorites DESC LIMIT :threshold")
 	public List<Product> findTopNFavoritedMovies(@Param("threshold") int threshold);
 }
