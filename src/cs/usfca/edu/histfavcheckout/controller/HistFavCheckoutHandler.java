@@ -76,27 +76,16 @@ public class HistFavCheckoutHandler {
 	
 	public ResponseEntity<?> getTopFavs(int start, int num) {
 		int threshold = 10;
-		Optional<Product> products[] = productRepository.findAll();
+		int arrayLength = num;
+		if(num > threshold) {arrayLength = threshold;}
+		Optional<Product> products[] = productRepository.findTopNFavoritedMovies(arrayLength);
 		if(products.length == 0) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie is added yet.");
 		}
-		int arrayLength = num;
-		if(num > threshold) {arrayLength = threshold;}
-		Optional<Product> topFavs[] = Arrays.copyOfRange(products, start, start + arrayLength);
-		int i = 0;
+		int index = 0;
 		Product[] movies;
 		for(Optional<Product> product : topFavs) {
-			movies[i] = products[i++].get();
-		}
-		
-		for(int i = 0; i < movies.length-1; i++) {
-			Product key = movies[i];
-			int j = i + 1;
-			while(j >= 0 && movies[j].getNumberOfFavorites() > key.getNumberOfFavorites()) {
-				movies[j+1] = movies[j];
-				j = j - 1;
-			}
-			movies[j+1] = key;
+			movies[index] = products[index++].get();
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(movies);		
 	}
