@@ -78,8 +78,8 @@ public class HistFavCheckoutHandler {
 		int threshold = 10;
 		int arrayLength = num;
 		if(num > threshold) {arrayLength = threshold;}
-		List<Product> products[] = productRepository.findTopNFavoritedMovies(arrayLength);
-		if(products.length == 0) {
+		List<Product> products = productRepository.findTopNFavoritedMovies(arrayLength);
+		if(products.size() == 0) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie is added yet.");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(products);		
