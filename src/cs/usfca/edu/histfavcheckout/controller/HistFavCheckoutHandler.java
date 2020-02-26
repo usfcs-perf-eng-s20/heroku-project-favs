@@ -88,8 +88,17 @@ public class HistFavCheckoutHandler {
 		for(Optional<Product> product : topFavs) {
 			movies[i] = products[i++].get();
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(movies);
 		
+		for(int i = 0; i < movies.length-1; i++) {
+			Product key = movies[i];
+			int j = i + 1;
+			while(j >= 0 && movies[j].getNumberOfFavorites() > key.getNumberOfFavorites()) {
+				movies[j+1] = movies[j];
+				j = j - 1;
+			}
+			movies[j+1] = key;
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(movies);		
 	}
 	
 	public ResponseEntity<?> checkout(int userId, int movieId) {
