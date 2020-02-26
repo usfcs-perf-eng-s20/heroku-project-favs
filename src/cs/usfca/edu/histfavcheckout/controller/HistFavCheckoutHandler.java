@@ -82,12 +82,7 @@ public class HistFavCheckoutHandler {
 		if(products.length == 0) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie is added yet.");
 		}
-		int index = 0;
-		Product[] movies;
-		for(Optional<Product> product : topFavs) {
-			movies[index] = products[index++].get();
-		}
-		return ResponseEntity.status(HttpStatus.OK).body(movies);		
+		return ResponseEntity.status(HttpStatus.OK).body(products);		
 	}
 	
 	public ResponseEntity<?> checkout(int userId, int movieId) {
