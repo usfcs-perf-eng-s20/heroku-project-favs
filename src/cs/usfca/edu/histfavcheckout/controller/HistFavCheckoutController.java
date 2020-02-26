@@ -58,7 +58,7 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> getTopFavs(@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int start, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+		return ResponseEntity.status(HttpStatus.OK).body(handler.getTopFavs(start, nums));
 	}
 
 	@ApiOperation(value = "Get Top Rated Movies", response = List.class)

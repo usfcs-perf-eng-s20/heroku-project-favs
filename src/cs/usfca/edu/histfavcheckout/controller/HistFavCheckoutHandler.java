@@ -1,5 +1,6 @@
 package cs.usfca.edu.histfavcheckout.controller;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -71,6 +72,24 @@ public class HistFavCheckoutHandler {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie does not exist!");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(product.get());
+	}
+	
+	public ResponseEntity<?> getTopFavs(int start, int num) {
+		int threshold = 10;
+		Optional<Product> products[] = productRepository.findAll();
+		if(products.length == 0) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie is added yet.");
+		}
+		int arrayLength = num;
+		if(num > threshold) {arrayLength = threshold;}
+		Optional<Product> topFavs[] = Arrays.copyOfRange(products, start, start + arrayLength);
+		int i = 0;
+		Product[] movies;
+		for(Optional<Product> product : topFavs) {
+			movies[i] = products[i++].get();
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(movies);
+		
 	}
 	
 	public ResponseEntity<?> checkout(int userId, int movieId) {
