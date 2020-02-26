@@ -56,9 +56,9 @@ public class HistFavCheckoutController {
     })
 	@GetMapping(value = "/getTopFavs")
 	@ResponseBody()
-	public ResponseEntity<?> getTopFavs(@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int start, 
+	public ResponseEntity<?> getTopFavs(@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return ResponseEntity.status(HttpStatus.OK).body(handler.getTopFavs(start, nums));
+		return ResponseEntity.status(HttpStatus.OK).body(handler.getTopFavs(page, nums));
 	}
 
 	@ApiOperation(value = "Get Top Rated Movies", response = List.class)

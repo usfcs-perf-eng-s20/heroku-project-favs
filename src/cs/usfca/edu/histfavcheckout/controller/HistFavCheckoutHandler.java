@@ -1,14 +1,12 @@
 package cs.usfca.edu.histfavcheckout.controller;
 
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import javax.print.attribute.standard.DateTimeAtCompleted;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,11 +72,8 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(product.get());
 	}
 	
-	public ResponseEntity<?> getTopFavs(int start, int num) {
-		int threshold = 10;
-		int arrayLength = num;
-		if(num > threshold) {arrayLength = threshold;}
-		List<Product> products = productRepository.findTopNFavoritedMovies(arrayLength);
+	public ResponseEntity<?> getTopFavs(int page, int nums) {
+		List<Product> products = productRepository.findTopNFavoritedMovies(PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
 		if(products.size() == 0) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie is added yet.");
 		}
