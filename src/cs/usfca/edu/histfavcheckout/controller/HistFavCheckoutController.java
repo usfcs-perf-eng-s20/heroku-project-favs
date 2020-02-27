@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import cs.usfca.edu.histfavcheckout.model.CheckoutRequest;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
@@ -151,9 +152,8 @@ public class HistFavCheckoutController {
     })
 	@PutMapping(value = "/checkOutMovies")
 	@ResponseBody()
-	public ResponseEntity<?> checkOutMovies(@ApiParam(value = "id of user", required = true) @RequestParam int userId, 
-			@ApiParam(value = "id of movie", required = true) @RequestParam int movieId) {
-		return handler.checkout(userId, movieId);
+	public ResponseEntity<?> checkOutMovies(@RequestBody CheckoutRequest request) {
+		return handler.checkout(request);
 	}
 	
 	@GetMapping(value = "/user")

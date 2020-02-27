@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import cs.usfca.edu.histfavcheckout.model.CheckoutRequest;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.InventoryRepository;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
@@ -80,7 +81,9 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(products);		
 	}
 	
-	public ResponseEntity<?> checkout(int userId, int movieId) {
+	public ResponseEntity<?> checkout(CheckoutRequest request) {
+		int movieId = request.getMovieId();
+		int userId = request.getUserId();
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
 		if(!inventory.isPresent()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie with Id " + movieId + " does not exist!");
