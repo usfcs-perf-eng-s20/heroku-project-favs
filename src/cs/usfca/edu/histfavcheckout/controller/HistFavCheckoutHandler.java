@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import cs.usfca.edu.histfavcheckout.model.CheckoutRequest;
+import cs.usfca.edu.histfavcheckout.model.CheckoutResponse;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.InventoryRepository;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
@@ -75,22 +76,22 @@ public class HistFavCheckoutHandler {
 	
 	public ResponseEntity<?> getTopFavs(int page, int nums) {
 		List<Product> products = productRepository.findTopNFavoritedMovies(PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
-		if(products.size() == 0) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie is added yet.");
-		}
 		return ResponseEntity.status(HttpStatus.OK).body(products);		
 	}
 	
-	public ResponseEntity<?> checkout(CheckoutRequest request) {
+	public CheckoutResponse checkout(CheckoutRequest request) {
 		int movieId = request.getMovieId();
 		int userId = request.getUserId();
+		CheckoutResponse resp = new CheckoutResponse(false);
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
 		if(!inventory.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie with Id " + movieId + " does not exist!");
+			//return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie with Id " + movieId + " does not exist!");
+			return resp;
 		}
 		Inventory record = inventory.get();
 		if(record.getAvailableCopies() < 1) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No more copies of this movie available for rent. Please try again later.");
+			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No more copies of this movie available for rent. Please try again later.");
+			return resp;
 		}
 		record.setAvailableCopies(record.getAvailableCopies() - 1);
 		
@@ -98,7 +99,8 @@ public class HistFavCheckoutHandler {
 		updated = inventoryRepository.updateAvailableCopies(record.getAvailableCopies(), record.getProductId());
 		if(updated < 1) {
 			// TODO: Add logs here saying for some reason server was unable to reduce available copies
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
+			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
+			return resp;
 		}
 		
 		// update user table here. Or insert new record
@@ -114,7 +116,8 @@ public class HistFavCheckoutHandler {
 				updated = userRepository.updateCheckoutDetails(theUser.isCheckouts(), theUser.getExpectedReturnDate(), pk);
 				if(updated < 1) {
 					// TODO: Add logs here saying for some reason server was unable to reduce available copies
-					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
+					//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
+					return resp;
 				}
 			}
 		} else {
@@ -123,8 +126,8 @@ public class HistFavCheckoutHandler {
 			theUser.setExpectedReturnDate(getExpectedReturnDate());
 			userRepository.save(theUser);
 		}
-		
-		return ResponseEntity.status(HttpStatus.OK).body("Checkout successful.");
+		resp.setConfirm(true);
+		return resp;
 	}
 	
 	/**

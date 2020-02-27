@@ -59,7 +59,7 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> getTopFavs(@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return ResponseEntity.status(HttpStatus.OK).body(handler.getTopFavs(page, nums));
+		return handler.getTopFavs(page, nums);
 	}
 
 	@ApiOperation(value = "Get Top Rated Movies", response = List.class)
@@ -153,7 +153,7 @@ public class HistFavCheckoutController {
 	@PutMapping(value = "/checkOutMovies")
 	@ResponseBody()
 	public ResponseEntity<?> checkOutMovies(@RequestBody CheckoutRequest request) {
-		return handler.checkout(request);
+		return ResponseEntity.status(HttpStatus.OK).body(handler.checkout(request));
 	}
 	
 	@GetMapping(value = "/user")
