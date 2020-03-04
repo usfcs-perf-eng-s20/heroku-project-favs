@@ -9,6 +9,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
+	
 	@Query("SELECT p FROM Product as p")
-	public List<Product> findTopNFavoritedMovies(Pageable pageable);
+	public List<Product> findTopN(Pageable pageable);
+	
+	@Query("SELECT new cs.usfca.edu.histfavcheckout.model.RatingModel((p.id) as id, (cast(p.sumOfRatings as float)/p.totalCountOfRatings) as averageRating) FROM Product p ORDER BY averageRating DESC")
+	public List<RatingModel> findTopNRating(Pageable pageable);
+	
 }

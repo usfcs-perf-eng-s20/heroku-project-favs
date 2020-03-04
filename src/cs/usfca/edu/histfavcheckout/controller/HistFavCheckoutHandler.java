@@ -20,6 +20,7 @@ import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
 import cs.usfca.edu.histfavcheckout.model.ProductRepository;
 import cs.usfca.edu.histfavcheckout.model.RatingRequest;
+import cs.usfca.edu.histfavcheckout.model.RatingModel;
 import cs.usfca.edu.histfavcheckout.model.User;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
 
@@ -76,8 +77,12 @@ public class HistFavCheckoutHandler {
 	}
 	
 	public ResponseEntity<?> getTopFavs(int page, int nums) {
-		List<Product> products = productRepository.findTopNFavoritedMovies(PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
+		List<Product> products = productRepository.findTopN(PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
 		return ResponseEntity.status(HttpStatus.OK).body(products);		
+	}
+	
+	public List<RatingModel> getTopRated(int page, int nums) {
+		return productRepository.findTopNRating(PageRequest.of(page, nums));
 	}
 	
 	public OperationalResponse rate(RatingRequest request) {
