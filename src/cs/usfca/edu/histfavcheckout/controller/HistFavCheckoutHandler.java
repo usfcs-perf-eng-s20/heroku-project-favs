@@ -1,7 +1,10 @@
 package cs.usfca.edu.histfavcheckout.controller;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,13 +15,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.CheckoutRequest;
 import cs.usfca.edu.histfavcheckout.model.CheckoutResponse;
+import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse;
+import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.InventoryRepository;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
 import cs.usfca.edu.histfavcheckout.model.ProductRepository;
+import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
+import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
 import cs.usfca.edu.histfavcheckout.model.User;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
 
@@ -77,6 +85,25 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> getTopFavs(int page, int nums) {
 		List<Product> products = productRepository.findTopNFavoritedMovies(PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
 		return ResponseEntity.status(HttpStatus.OK).body(products);		
+	}
+	
+	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
+		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
+				PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
+		HashMap<Integer, User> movieMap = new HashMap();
+		for(User u: userCheckedOutMovies) {
+			movieMap.put(u.getId().getProductId(), u);
+		}
+		//TODO: call search team's API here
+		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
+		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
+		for(MovieData m : searchAPIResp.getResults()) {
+			User usr = movieMap.get(m.getID());
+			String checkoutDate = getCheckoutDate(usr.getExpectedReturnDate());
+			Movie mov = checkouts.new Movie(m.getTitle(), m.getID(), checkoutDate);
+			checkouts.addMovie(mov);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(checkouts);		
 	}
 	
 	public CheckoutResponse checkout(CheckoutRequest request) {
@@ -141,5 +168,15 @@ public class HistFavCheckoutHandler {
         c.setTime(currentDate);
         c.add(Calendar.DATE, NUMBER_OF_DAYS_TO_BORROW);
         return c.getTime();
+	}
+	
+	private static String getCheckoutDate(Date expectedReturnDate) {
+		String pattern = "MM/dd/yyyy";
+        DateFormat df = new SimpleDateFormat(pattern);
+        Calendar c = Calendar.getInstance();
+        c.setTime(expectedReturnDate);
+        c.add(Calendar.DATE, -NUMBER_OF_DAYS_TO_BORROW);
+        String reportDate = df.format(c.getTime());
+        return reportDate;
 	}
 }
