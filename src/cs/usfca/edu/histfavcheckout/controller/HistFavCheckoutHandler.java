@@ -12,13 +12,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import cs.usfca.edu.histfavcheckout.model.CheckoutRequest;
-import cs.usfca.edu.histfavcheckout.model.CheckoutResponse;
+import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.InventoryRepository;
+import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
 import cs.usfca.edu.histfavcheckout.model.ProductRepository;
+import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import cs.usfca.edu.histfavcheckout.model.User;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
 
@@ -79,10 +80,43 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(products);		
 	}
 	
-	public CheckoutResponse checkout(CheckoutRequest request) {
+	public OperationalResponse rate(RatingRequest request) {
+		if(request.getRating() > 5 || request.getRating() < 0) {
+			// log here: invalid rating.
+			return new OperationalResponse(false, "Invalid rating! rating must be between 0 and 5");
+		}
+		User user;
+		Product product;
+		PrimaryKey key = new PrimaryKey(request.getUserId(), request.getMovieId());
+		if(productRepository.existsById(request.getMovieId())) {
+			product = productRepository.getOne(request.getMovieId());
+		} 
+		else {
+			product = new Product(request.getMovieId());
+		}
+		if(userRepository.existsById(key)) {
+			user = userRepository.getOne(key);
+			if(user.getRating() == -1) {
+				product.setTotalCountOfRatings(product.getTotalCountOfRatings() + 1);
+			} else {
+				product.setSumOfRatings(product.getSumOfRatings() + request.getRating() - user.getRating());
+			}
+		}
+		else {
+			user = new User(key);
+			product.setSumOfRatings(product.getSumOfRatings() + request.getRating());
+			product.setTotalCountOfRatings(product.getTotalCountOfRatings() + 1);
+		}
+		user.setRating(request.getRating());
+		userRepository.save(user);
+		productRepository.save(product);
+		return new OperationalResponse(true);
+	}
+	
+	public OperationalResponse checkout(OperationalRequest request) {
 		int movieId = request.getMovieId();
 		int userId = request.getUserId();
-		CheckoutResponse resp = new CheckoutResponse(false);
+		OperationalResponse resp = new OperationalResponse(false);
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
 		if(!inventory.isPresent()) {
 			//return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie with Id " + movieId + " does not exist!");

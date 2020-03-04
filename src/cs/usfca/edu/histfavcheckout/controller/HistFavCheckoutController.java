@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,10 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import cs.usfca.edu.histfavcheckout.model.CheckoutRequest;
+import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
+import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -60,6 +60,20 @@ public class HistFavCheckoutController {
 	public ResponseEntity<?> getTopFavs(@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
 		return handler.getTopFavs(page, nums);
+	}
+	
+	@ApiOperation(value = "Rate a Movie")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "Successfully rated movie"),
+        @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
+        @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
+        @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
+    })
+	@PostMapping(value = "/rateMovie")
+	@ResponseBody()
+	public ResponseEntity<?> rateMovie(@ApiParam(value = "RatingRequest", required = true) 
+		@RequestBody RatingRequest request) {
+		return ResponseEntity.status(HttpStatus.OK).body(handler.rate(request));
 	}
 
 	@ApiOperation(value = "Get Top Rated Movies", response = List.class)
@@ -152,7 +166,7 @@ public class HistFavCheckoutController {
     })
 	@PutMapping(value = "/checkOutMovies")
 	@ResponseBody()
-	public ResponseEntity<?> checkOutMovies(@RequestBody CheckoutRequest request) {
+	public ResponseEntity<?> checkOutMovies(@RequestBody OperationalRequest request) {
 		return ResponseEntity.status(HttpStatus.OK).body(handler.checkout(request));
 	}
 	
