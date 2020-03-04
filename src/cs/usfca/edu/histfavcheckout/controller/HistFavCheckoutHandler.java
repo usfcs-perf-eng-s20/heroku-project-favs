@@ -90,13 +90,22 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
 				PageRequest.of(page, nums));
+		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
+		if(userCheckedOutMovies.size() == 0) {
+			System.out.println("Returning! No valid data for user");
+			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
+		}
 		HashMap<Integer, User> movieMap = new HashMap();
 		for(User u: userCheckedOutMovies) {
 			movieMap.put(u.getId().getProductId(), u);
 		}
-		//TODO: call search team's API here
+		System.out.println("Calling search APIs");
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
-		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
+		if(searchAPIResp == null) {
+			System.out.println("Returning! Search API had no data for user checkedout movies");
+			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
+		}
+		System.out.println("Returning from Search APIs");
 		for(MovieData m : searchAPIResp.getResults()) {
 			User usr = movieMap.get(m.getID());
 			String checkoutDate = getCheckoutDate(usr.getExpectedReturnDate());
