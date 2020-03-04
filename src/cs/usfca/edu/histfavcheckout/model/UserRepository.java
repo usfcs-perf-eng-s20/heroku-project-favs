@@ -23,4 +23,5 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	@Query("UPDATE User u SET u.checkouts = :checkouts, u.expectedReturnDate = :expectedReturnDate WHERE u.id = :id")
 	public int updateCheckoutDetails(@Param("checkouts") boolean checkout, @Param("expectedReturnDate") Date expectedReturnDate, 
 			@Param("id") PrimaryKey id);
+	
 }
