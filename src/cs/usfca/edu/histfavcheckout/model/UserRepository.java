@@ -25,6 +25,6 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	public int updateCheckoutDetails(@Param("checkouts") boolean checkout, @Param("expectedReturnDate") Date expectedReturnDate, 
 			@Param("id") PrimaryKey id);
 	
-	@Query("SELECT u FROM User u WHERE u.id.userId = :userId and u.checkouts = :checkouts")
+	@Query("SELECT u FROM User u WHERE u.id.userId=:userId AND u.checkouts=:checkouts")
 	public List<User> findCheckedOutMovies(@Param("userId") int userId, @Param("checkouts") boolean checkout, Pageable pageable);
 }
