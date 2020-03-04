@@ -89,7 +89,7 @@ public class HistFavCheckoutHandler {
 	
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
-				PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
+				PageRequest.of(page, nums));
 		HashMap<Integer, User> movieMap = new HashMap();
 		for(User u: userCheckedOutMovies) {
 			movieMap.put(u.getId().getProductId(), u);
