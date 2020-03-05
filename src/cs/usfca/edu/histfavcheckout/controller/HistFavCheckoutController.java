@@ -219,4 +219,11 @@ public class HistFavCheckoutController {
 	public ResponseEntity<?> postMovie(@RequestBody Product movie) {
 		return handler.addMovie(movie);
 	}
+	
+	@PostMapping(value = "/favoriteMovie")
+	@ResponseBody()
+	public ResponseEntity<?> favoriteMovie(@ApiParam(value = "OperationalRequest", required = true) 
+		@RequestBody OperationalRequest request) {
+		return ResponseEntity.status(HttpStatus.OK).body(handler.favoriteMovie(request));
+	}
 }
