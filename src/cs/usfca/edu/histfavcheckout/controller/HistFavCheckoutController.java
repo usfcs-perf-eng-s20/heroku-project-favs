@@ -134,9 +134,9 @@ public class HistFavCheckoutController {
 	@GetMapping(value = "/checkedOutMovies")
 	@ResponseBody()
 	public ResponseEntity<?> getCheckedOutMovies(@ApiParam(value = "id of user", required = true) @RequestParam int userId, 
-			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int start, 
+			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+		return handler.getCheckouts(userId, page, nums);
 	}
 	
 	@ApiOperation(value = "Lets a user return a movie", response = String.class)
@@ -148,7 +148,7 @@ public class HistFavCheckoutController {
         @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
 
     })
-	@PutMapping(value = "/returnMovies")
+	@PutMapping(value = "/returnMovie")
 	@ResponseBody()
 	public ResponseEntity<?> returnMovies(@ApiParam(value = "id of user", required = true) @RequestParam int userId, 
 			@ApiParam(value = "id of movie", required = true) @RequestParam int movieId) {

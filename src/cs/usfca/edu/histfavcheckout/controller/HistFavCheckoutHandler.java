@@ -1,7 +1,11 @@
 package cs.usfca.edu.histfavcheckout.controller;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +16,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+
+import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
+import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse;
+import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
 import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.InventoryRepository;
@@ -19,6 +27,8 @@ import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
 import cs.usfca.edu.histfavcheckout.model.ProductRepository;
+import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
+import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
 import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import cs.usfca.edu.histfavcheckout.model.RatingModel;
 import cs.usfca.edu.histfavcheckout.model.User;
@@ -81,6 +91,35 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(products);		
 	}
 	
+	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
+		//System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
+		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
+				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
+		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
+		if(userCheckedOutMovies.size() == 0) {
+			//System.out.println("Returning! No valid data for user");
+			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
+		}
+		LinkedHashMap<Integer, User> movieMap = new LinkedHashMap();
+		for(User u: userCheckedOutMovies) {
+			movieMap.put(u.getId().getProductId(), u);
+		}
+		//System.out.println("Calling search APIs");
+		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
+		if(searchAPIResp == null) {
+			//System.out.println("Returning! Search API had no data for user checkedout movies");
+			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
+		}
+		//System.out.println("Returning from Search APIs");
+		for(MovieData m : searchAPIResp.getResults()) {
+			User usr = movieMap.get(m.getID());
+			String checkoutDate = getCheckoutDate(usr.getExpectedReturnDate());
+			Movie mov = checkouts.new Movie(m.getTitle(), m.getID(), checkoutDate);
+			checkouts.addMovie(mov);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(checkouts);		
+	}
+	
 	public List<RatingModel> getTopRated(int page, int nums) {
 		return productRepository.findTopNRating(PageRequest.of(page, nums));
 	}
@@ -132,10 +171,9 @@ public class HistFavCheckoutHandler {
 			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No more copies of this movie available for rent. Please try again later.");
 			return resp;
 		}
-		record.setAvailableCopies(record.getAvailableCopies() - 1);
-		
+		int availableCopies = record.getAvailableCopies() - 1;
 		int updated = 0;
-		updated = inventoryRepository.updateAvailableCopies(record.getAvailableCopies(), record.getProductId());
+		updated = inventoryRepository.updateAvailableCopies(availableCopies, record.getProductId());
 		if(updated < 1) {
 			// TODO: Add logs here saying for some reason server was unable to reduce available copies
 			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
@@ -180,5 +218,15 @@ public class HistFavCheckoutHandler {
         c.setTime(currentDate);
         c.add(Calendar.DATE, NUMBER_OF_DAYS_TO_BORROW);
         return c.getTime();
+	}
+	
+	private static String getCheckoutDate(Date expectedReturnDate) {
+		String pattern = "MM/dd/yyyy";
+        DateFormat df = new SimpleDateFormat(pattern);
+        Calendar c = Calendar.getInstance();
+        c.setTime(expectedReturnDate);
+        c.add(Calendar.DATE, -NUMBER_OF_DAYS_TO_BORROW);
+        String reportDate = df.format(c.getTime());
+        return reportDate;
 	}
 }

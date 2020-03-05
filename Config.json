@@ -1,0 +1,3 @@
+{
+	"searchMoviesURL" : "https://perfeng-go-search.herokuapp.com/getMoviesByIds?ids="
+}
