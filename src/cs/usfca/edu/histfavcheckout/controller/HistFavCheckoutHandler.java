@@ -157,6 +157,32 @@ public class HistFavCheckoutHandler {
 		return new OperationalResponse(true);
 	}
 	
+	public OperationalResponse favoriteMovie(OperationalRequest request) {
+		User user;
+		Product product;
+		PrimaryKey key = new PrimaryKey(request.getUserId(), request.getMovieId());
+		if(productRepository.existsById(request.getMovieId())) {
+			product = productRepository.getOne(request.getMovieId());
+		} 
+		else {
+			product = new Product(request.getMovieId());
+		}
+		if(userRepository.existsById(key)) {
+			user = userRepository.getOne(key);
+			if(!user.isFavourites()) {
+				product.setNumberOfFavorites(product.getNumberOfFavorites() + 1);
+			} 
+		}
+		else {
+			user = new User(key);
+			product.setNumberOfFavorites(product.getNumberOfFavorites() + 1);
+		}
+		user.setFavourites(true);
+		userRepository.save(user);
+		productRepository.save(product);
+		return new OperationalResponse(true);
+	}
+	
 	public OperationalResponse checkout(OperationalRequest request) {
 		int movieId = request.getMovieId();
 		int userId = request.getUserId();
