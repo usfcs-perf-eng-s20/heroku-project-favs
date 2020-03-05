@@ -2,12 +2,17 @@ package cs.usfca.edu.histfavcheckout.controller;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +34,7 @@ import cs.usfca.edu.histfavcheckout.model.Product;
 import cs.usfca.edu.histfavcheckout.model.ProductRepository;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
+import cs.usfca.edu.histfavcheckout.model.TopRatedResponse;
 import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import cs.usfca.edu.histfavcheckout.model.RatingModel;
 import cs.usfca.edu.histfavcheckout.model.User;
@@ -114,14 +120,63 @@ public class HistFavCheckoutHandler {
 		for(MovieData m : searchAPIResp.getResults()) {
 			User usr = movieMap.get(m.getID());
 			String checkoutDate = getCheckoutDate(usr.getExpectedReturnDate());
-			Movie mov = checkouts.new Movie(m.getTitle(), m.getID(), checkoutDate);
+			Movie mov = checkouts.newMovie(m.getTitle(), m.getID(), checkoutDate);
 			checkouts.addMovie(mov);
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(checkouts);		
 	}
 	
-	public List<RatingModel> getTopRated(int page, int nums) {
-		return productRepository.findTopNRating(PageRequest.of(page, nums));
+	public ResponseEntity<?> getTopRated(int page, int nums) {
+		List<RatingModel> ratings = productRepository.findTopNRating(PageRequest.of(page, nums));
+		if(ratings.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie records are available!");
+		}
+		LinkedHashMap<Integer, RatingModel> ratingMap = new LinkedHashMap<Integer, RatingModel>();
+		for(RatingModel ratingModel : ratings) {
+			ratingMap.put(ratingModel.getId(), ratingModel);
+		}
+		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(ratingMap.keySet());
+		if(searchAPIResp == null) {
+			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + ratingMap.keySet());
+		}
+		List<TopRatedResponse> res =  new LinkedList<TopRatedResponse>();
+		List<MovieData> moviesData = searchAPIResp.getResults();
+		for(MovieData movie : moviesData) {
+			res.add(new TopRatedResponse(movie.getTitle(), movie.getID(),
+					ratingMap.getOrDefault(movie.getID(), new RatingModel()).getAverageRating()));
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(res);
+	}
+	
+	public ResponseEntity<?> getTopUsers(String selected, int page, int nums) {
+		List<User> users = new ArrayList<>();
+		if(selected.equals("checkout")) {
+			users = userRepository.findUserCheckouts(true);
+		}
+		else if(selected.equals("faves")) {
+			users = userRepository.findUserFavourites(true);
+		}
+		else if(selected.equals("ratings")){
+			users = userRepository.findTopRaters();
+		}
+		LinkedHashMap<Integer, Integer> uniqueId = new LinkedHashMap<>();
+		for(User user: users) {
+			if(!uniqueId.containsKey(user.getId().getUserId())) {
+				uniqueId.put(user.getId().getUserId(), 1);
+			} else {
+				uniqueId.put(user.getId().getUserId(), uniqueId.get(user.getId().getUserId()) + 1);
+			}
+		}
+		List<Entry<Integer,Integer>> result = new ArrayList<>(uniqueId.entrySet());
+		result.sort(Entry.comparingByValue());
+		Collections.reverse(result);
+		if(page == 0) {
+			result = result.subList(0, nums);
+		}
+		else if(page*nums-1<=result.size()) {
+			result = result.subList(0, page*nums);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(result);
 	}
 	
 	public OperationalResponse rate(RatingRequest request) {
@@ -152,6 +207,32 @@ public class HistFavCheckoutHandler {
 			product.setTotalCountOfRatings(product.getTotalCountOfRatings() + 1);
 		}
 		user.setRating(request.getRating());
+		userRepository.save(user);
+		productRepository.save(product);
+		return new OperationalResponse(true);
+	}
+	
+	public OperationalResponse favoriteMovie(OperationalRequest request) {
+		User user;
+		Product product;
+		PrimaryKey key = new PrimaryKey(request.getUserId(), request.getMovieId());
+		if(productRepository.existsById(request.getMovieId())) {
+			product = productRepository.getOne(request.getMovieId());
+		} 
+		else {
+			product = new Product(request.getMovieId());
+		}
+		if(userRepository.existsById(key)) {
+			user = userRepository.getOne(key);
+			if(!user.isFavourites()) {
+				product.setNumberOfFavorites(product.getNumberOfFavorites() + 1);
+			} 
+		}
+		else {
+			user = new User(key);
+			product.setNumberOfFavorites(product.getNumberOfFavorites() + 1);
+		}
+		user.setFavourites(true);
 		userRepository.save(user);
 		productRepository.save(product);
 		return new OperationalResponse(true);

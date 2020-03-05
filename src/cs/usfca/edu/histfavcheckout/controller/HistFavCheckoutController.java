@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
+import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
@@ -73,7 +74,11 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> rateMovie(@ApiParam(value = "RatingRequest", required = true) 
 		@RequestBody RatingRequest request) {
-		return ResponseEntity.status(HttpStatus.OK).body(handler.rate(request));
+		OperationalResponse response = handler.rate(request);
+		if(response.isConfirm()) {
+			return ResponseEntity.status(HttpStatus.OK).body(handler.rate(request));
+		}
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(handler.rate(request));
 	}
 
 	@ApiOperation(value = "Get Top Rated Movies", response = List.class)
@@ -91,6 +96,20 @@ public class HistFavCheckoutController {
 		return ResponseEntity.status(HttpStatus.OK).body(handler.getTopRated(page, nums));
 	}
 	
+	@ApiOperation(value = "Favorite a Movie")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "Successfully favorited movie"),
+        @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
+        @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
+        @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
+    })
+	@PostMapping(value = "/favoriteMovie")
+	@ResponseBody()
+	public ResponseEntity<?> favoriteMovie(@ApiParam(value = "OperationalRequest", required = true) 
+		@RequestBody OperationalRequest request) {
+		return ResponseEntity.status(HttpStatus.OK).body(handler.favoriteMovie(request));
+	}
+	
 	@ApiOperation(value = "Get Top Users", response = List.class)
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Successfully retrieved top users"),
@@ -102,9 +121,9 @@ public class HistFavCheckoutController {
 	@GetMapping(value = "/getTopUsers")
 	@ResponseBody()
 	public ResponseEntity<?> getTopUsers(@ApiParam(value = "Checkouts, Faves and Ratings per user can be selected", required = true) @RequestParam String selected, 
-			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int start, 
+			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+		return handler.getTopUsers(selected, page, nums);
 	}
 	
 	@ApiOperation(value = "Returns all the favorite movies and the total number of movies checked out for the user", response = List.class)
