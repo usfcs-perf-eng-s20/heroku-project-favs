@@ -2,16 +2,18 @@ package cs.usfca.edu.histfavcheckout.model;
 
 import java.io.Serializable;
 
-public class CheckoutRequest implements Serializable {
-
+public class RatingRequest implements Serializable {
+	
 	private int userId;
 	private int movieId;
+	private int rating;
 	
-	public CheckoutRequest() {}
+	public RatingRequest() {}
 	
-	public CheckoutRequest(int userId, int movieId) {
+	public RatingRequest(int userId, int movieId, int rating) {
 		this.userId = userId;
 		this.movieId = movieId;
+		this.rating = rating;
 	}
 
 	public int getUserId() {
@@ -29,12 +31,20 @@ public class CheckoutRequest implements Serializable {
 	public void setMovieId(int movieId) {
 		this.movieId = movieId;
 	}
+
+	public int getRating() {
+		return rating;
+	}
+
+	public void setRating(int rating) {
+		this.rating = rating;
+	}
 	
 	@Override
     public String toString() {
-    	return "CheckoutRequest: { userId: " + userId
+    	return "Rating: { userId: " + userId
     			+ ", movieId: " + movieId
+    			+ ", ratingId: " + rating
     			+ "}";
     }
-	
 }

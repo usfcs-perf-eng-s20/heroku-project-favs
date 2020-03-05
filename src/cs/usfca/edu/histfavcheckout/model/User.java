@@ -19,9 +19,9 @@ public class User {
 	@Id
     private PrimaryKey id;
 	@Column(nullable = false)
-	private boolean favourites = false;
+	private boolean favourites;
 	@Column(nullable = false)
-	private boolean checkouts = false;
+	private boolean checkouts;
 	@Column(nullable = true)
 	@Max(5)
 	private int rating;  
@@ -30,7 +30,11 @@ public class User {
 	@Temporal(TemporalType.DATE)
 	private Date actualReturnDate;
 	
-	public User() {}
+	public User() {
+		this.favourites = false;
+		this.checkouts = false;
+		this.rating = -1;
+	}
 	
 	public User(PrimaryKey id) {
 		this.id = id;
