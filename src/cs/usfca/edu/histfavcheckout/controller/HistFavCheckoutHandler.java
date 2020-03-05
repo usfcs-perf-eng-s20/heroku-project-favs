@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -93,13 +94,13 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
 		//System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
-				PageRequest.of(page, nums));
+				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
 		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
 		if(userCheckedOutMovies.size() == 0) {
 			//System.out.println("Returning! No valid data for user");
 			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 		}
-		HashMap<Integer, User> movieMap = new HashMap();
+		LinkedHashMap<Integer, User> movieMap = new LinkedHashMap();
 		for(User u: userCheckedOutMovies) {
 			movieMap.put(u.getId().getProductId(), u);
 		}
