@@ -91,6 +91,20 @@ public class HistFavCheckoutController {
 		return ResponseEntity.status(HttpStatus.OK).body(handler.getTopRated(page, nums));
 	}
 	
+	@ApiOperation(value = "Favorite a Movie")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "Successfully favorited movie"),
+        @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
+        @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
+        @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
+    })
+	@PostMapping(value = "/favoriteMovie")
+	@ResponseBody()
+	public ResponseEntity<?> favoriteMovie(@ApiParam(value = "OperationalRequest", required = true) 
+		@RequestBody OperationalRequest request) {
+		return ResponseEntity.status(HttpStatus.OK).body(handler.favoriteMovie(request));
+	}
+	
 	@ApiOperation(value = "Get Top Users", response = List.class)
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Successfully retrieved top users"),
