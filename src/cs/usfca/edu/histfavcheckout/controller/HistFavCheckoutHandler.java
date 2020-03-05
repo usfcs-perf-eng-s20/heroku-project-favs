@@ -93,7 +93,7 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
 		//System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
-				PageRequest.of(page, nums));
+				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
 		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
 		if(userCheckedOutMovies.size() == 0) {
 			//System.out.println("Returning! No valid data for user");
