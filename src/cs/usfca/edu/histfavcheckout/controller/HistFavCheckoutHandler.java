@@ -88,25 +88,25 @@ public class HistFavCheckoutHandler {
 	}
 	
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
-		System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
+		//System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
 				PageRequest.of(page, nums));
 		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
 		if(userCheckedOutMovies.size() == 0) {
-			System.out.println("Returning! No valid data for user");
+			//System.out.println("Returning! No valid data for user");
 			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 		}
 		HashMap<Integer, User> movieMap = new HashMap();
 		for(User u: userCheckedOutMovies) {
 			movieMap.put(u.getId().getProductId(), u);
 		}
-		System.out.println("Calling search APIs");
+		//System.out.println("Calling search APIs");
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
 		if(searchAPIResp == null) {
-			System.out.println("Returning! Search API had no data for user checkedout movies");
+			//System.out.println("Returning! Search API had no data for user checkedout movies");
 			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 		}
-		System.out.println("Returning from Search APIs");
+		//System.out.println("Returning from Search APIs");
 		for(MovieData m : searchAPIResp.getResults()) {
 			User usr = movieMap.get(m.getID());
 			String checkoutDate = getCheckoutDate(usr.getExpectedReturnDate());
@@ -122,13 +122,11 @@ public class HistFavCheckoutHandler {
 		CheckoutResponse resp = new CheckoutResponse(false);
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
 		if(!inventory.isPresent()) {
-			System.out.println("PUT /checkout Exiting 1");
 			//return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie with Id " + movieId + " does not exist!");
 			return resp;
 		}
 		Inventory record = inventory.get();
 		if(record.getAvailableCopies() < 1) {
-			System.out.println("PUT /checkout Exiting 1");
 			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No more copies of this movie available for rent. Please try again later.");
 			return resp;
 		}
@@ -136,7 +134,6 @@ public class HistFavCheckoutHandler {
 		int updated = 0;
 		updated = inventoryRepository.updateAvailableCopies(availableCopies, record.getProductId());
 		if(updated < 1) {
-			System.out.println("PUT /checkout Exiting 3");
 			// TODO: Add logs here saying for some reason server was unable to reduce available copies
 			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
 			return resp;
@@ -154,7 +151,6 @@ public class HistFavCheckoutHandler {
 				theUser.setExpectedReturnDate(getExpectedReturnDate());
 				updated = userRepository.updateCheckoutDetails(theUser.isCheckouts(), theUser.getExpectedReturnDate(), pk);
 				if(updated < 1) {
-					System.out.println("PUT /checkout Exiting 4");
 					// TODO: Add logs here saying for some reason server was unable to reduce available copies
 					//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
 					return resp;
