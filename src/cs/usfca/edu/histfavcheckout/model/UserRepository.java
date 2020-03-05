@@ -27,4 +27,18 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	
 	@Query("SELECT u FROM User u WHERE u.id.userId = :userId AND u.checkouts = :checkouts")
 	public List<User> findCheckedOutMovies(@Param("userId") int userId, @Param("checkouts") boolean checkout, Pageable pageable);
+
+	@Query("SELECT COUNT(*) FROM User u WHERE (u.checkouts = true) AND (u.id.userId = :userId)")
+	public int getCheckoutCount(@Param("userId") int userId);
+
+	@Query("SELECT COUNT(*) FROM User u WHERE u.id.userId = :userId")
+	public int getUserCount(@Param("userId") int userId);
+
+	@Query("SELECT u FROM User u where u.id.userId = :userId")
+	public List<User> getUserFavorites(@Param("userId") int userId);
+
+	@Transactional
+	@Modifying
+	@Query("UPDATE User u SET u.actualReturnDate = :actualReturnDate WHERE u.id = :id")
+	public int updateCheckoutReturn(@Param("id") PrimaryKey id, @Param("actualReturnDate") Date actualReturnDate);
 }

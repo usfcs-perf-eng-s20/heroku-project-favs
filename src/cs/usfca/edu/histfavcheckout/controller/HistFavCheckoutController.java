@@ -133,7 +133,8 @@ public class HistFavCheckoutController {
 	@GetMapping(value = "/totalFavesAndCheckouts")
 	@ResponseBody()
 	public ResponseEntity<?> totalFavesAndCheckouts(@ApiParam(value = "id of user", required = true) @RequestParam int userId) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+		return handler.totalFavesAndCheckouts(userId);
+//		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
 	}
 	
 	@ApiOperation(value = "Returns details of all movies a user has checked out", response = List.class)
@@ -166,7 +167,8 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> returnMovies(@ApiParam(value = "id of user", required = true) @RequestParam int userId, 
 			@ApiParam(value = "id of movie", required = true) @RequestParam int movieId) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+		return handler.returnMovie(userId, movieId);
+//		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
 	}
 	
 	@ApiOperation(value = "Lets a user checkout a movie", response = String.class)
