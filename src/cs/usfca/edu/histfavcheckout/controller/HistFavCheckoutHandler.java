@@ -122,19 +122,21 @@ public class HistFavCheckoutHandler {
 		CheckoutResponse resp = new CheckoutResponse(false);
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
 		if(!inventory.isPresent()) {
+			System.out.println("PUT /checkout Exiting 1");
 			//return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie with Id " + movieId + " does not exist!");
 			return resp;
 		}
 		Inventory record = inventory.get();
 		if(record.getAvailableCopies() < 1) {
+			System.out.println("PUT /checkout Exiting 1");
 			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No more copies of this movie available for rent. Please try again later.");
 			return resp;
 		}
-		record.setAvailableCopies(record.getAvailableCopies() - 1);
-		
+		int availableCopies = record.getAvailableCopies() - 1;
 		int updated = 0;
-		updated = inventoryRepository.updateAvailableCopies(record.getAvailableCopies(), record.getProductId());
+		updated = inventoryRepository.updateAvailableCopies(availableCopies, record.getProductId());
 		if(updated < 1) {
+			System.out.println("PUT /checkout Exiting 3");
 			// TODO: Add logs here saying for some reason server was unable to reduce available copies
 			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
 			return resp;
@@ -152,6 +154,7 @@ public class HistFavCheckoutHandler {
 				theUser.setExpectedReturnDate(getExpectedReturnDate());
 				updated = userRepository.updateCheckoutDetails(theUser.isCheckouts(), theUser.getExpectedReturnDate(), pk);
 				if(updated < 1) {
+					System.out.println("PUT /checkout Exiting 4");
 					// TODO: Add logs here saying for some reason server was unable to reduce available copies
 					//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
 					return resp;
