@@ -1,4 +1,4 @@
-package cs.usfca.edu.histfavcheckout.config;
+package cs.usfca.edu.histfavcheckout.utils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

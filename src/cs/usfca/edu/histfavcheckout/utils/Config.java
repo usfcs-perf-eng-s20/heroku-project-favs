@@ -1,4 +1,4 @@
-package cs.usfca.edu.histfavcheckout.config;
+package cs.usfca.edu.histfavcheckout.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 
+import org.springframework.stereotype.Component;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -14,9 +16,16 @@ import com.google.gson.JsonSyntaxException;
 public class Config {
 	public static Config config;
 	private String searchMoviesURL;
+	private String authURL;
 	
 	//getters
-	public String getsearchMoviesURL()			{return this.searchMoviesURL;}
+	public String getSearchMoviesURL() {
+		return this.searchMoviesURL;
+	}
+	
+	public String getAuthURL() {
+		return this.authURL;
+	}
 	
 	//read config file and create class object
 	public static Config readConfig(String path) throws IOException {
