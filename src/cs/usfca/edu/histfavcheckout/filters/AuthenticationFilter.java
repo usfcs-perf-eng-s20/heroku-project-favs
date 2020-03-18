@@ -3,6 +3,7 @@ package cs.usfca.edu.histfavcheckout.filters;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -15,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 
@@ -22,24 +25,10 @@ import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.AuthRequest;
 import cs.usfca.edu.histfavcheckout.utils.MultiReadHttpServletRequest;
 
-@Configuration
+@Order(0)
 public class AuthenticationFilter implements Filter {
 	
 	private static Gson gson = new Gson();
-	
-	@Bean
-	public FilterRegistrationBean<AuthenticationFilter> filter() {
-		FilterRegistrationBean<AuthenticationFilter> bean = new FilterRegistrationBean<>();
-
-		bean.setFilter(new AuthenticationFilter());
-		bean.addUrlPatterns("/rateMovie");  // or use setUrlPatterns()
-		bean.addUrlPatterns("/totalFavesAndCheckouts");
-		bean.addUrlPatterns("/checkedOutMovies");
-		bean.addUrlPatterns("/returnMovies");
-		bean.addUrlPatterns("/checkOutMovies");
-		bean.addUrlPatterns("/user");
-		return bean;
-	}
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)

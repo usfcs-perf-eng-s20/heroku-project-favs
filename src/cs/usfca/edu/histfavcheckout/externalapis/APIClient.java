@@ -7,10 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.http.MediaType;
+
 import com.google.gson.Gson;
 
 import cs.usfca.edu.histfavcheckout.utils.Config;
 import cs.usfca.edu.histfavcheckout.model.AuthResponse;
+import cs.usfca.edu.histfavcheckout.model.EDRRequest;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 
 public class APIClient {
@@ -53,8 +56,19 @@ public class APIClient {
 		String response = request.getResponse(con);
 		if(response != null) {
 			AuthResponse authResponse = gson.fromJson(response, AuthResponse.class);
+			con.disconnect();
 			return authResponse.isUserLoggedIn();
 		}
+		con.disconnect();
 		return false;
+	}
+	
+	public static int sendEDR(EDRRequest edrRequest) throws IOException {
+		URL url = new URL(Config.config.getAnalyticsURL());
+		HttpURLConnection con = request.connect(url, "POST", MediaType.APPLICATION_JSON_VALUE, null);
+		request.writeToBody(con, gson.toJson(edrRequest));
+		int responseCode = con.getResponseCode();
+		con.disconnect();
+		return responseCode;
 	}
 }
