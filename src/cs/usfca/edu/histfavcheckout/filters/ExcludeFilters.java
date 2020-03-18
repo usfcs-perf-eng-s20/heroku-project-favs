@@ -10,10 +10,8 @@ public class ExcludeFilters {
 	public FilterRegistrationBean<AuthenticationFilter> filter() {
 		FilterRegistrationBean<AuthenticationFilter> bean = new FilterRegistrationBean<>();
 		bean.setFilter(new AuthenticationFilter());
-//		String[] urlPatterns = {"/rateMovie/", "/totalFavesAndCheckouts/", "/checkedOutMovies/", 
-//				"/returnMovies/", "/checkOutMovies/", "/user/"};
 		bean.addUrlPatterns("/rateMovie", "/totalFavesAndCheckouts", "/checkedOutMovies", 
-				"/returnMovies", "/checkOutMovies", "/user");  // or use setUrlPatterns()
+				"/returnMovies", "/checkOutMovies", "/user");
 		return bean;
 	}
 	
@@ -21,9 +19,7 @@ public class ExcludeFilters {
 	public FilterRegistrationBean<AnalyticsFilter> analyticsFilter() {
 		FilterRegistrationBean<AnalyticsFilter> bean = new FilterRegistrationBean<>();
 		bean.setFilter(new AnalyticsFilter());
-//		String[] urlPatterns = {"/rateMovie/", "/totalFavesAndCheckouts/", "/checkedOutMovies/", 
-//				"/returnMovies/", "/checkOutMovies/", "/user/"};
-		bean.addUrlPatterns("*");  // or use setUrlPatterns()
+		bean.addUrlPatterns("*");
 		return bean;
 	}
 }
