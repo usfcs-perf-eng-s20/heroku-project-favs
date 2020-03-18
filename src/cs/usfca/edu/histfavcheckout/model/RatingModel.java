@@ -3,7 +3,6 @@ package cs.usfca.edu.histfavcheckout.model;
 import java.io.Serializable;
 
 public class RatingModel implements Serializable {
-	
 	private int id;
 	private float averageRating;
 	

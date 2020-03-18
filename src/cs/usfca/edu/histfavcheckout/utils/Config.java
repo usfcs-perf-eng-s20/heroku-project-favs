@@ -17,6 +17,7 @@ public class Config {
 	public static Config config;
 	private String searchMoviesURL;
 	private String authURL;
+	private String analyticsURL;
 	
 	//getters
 	public String getSearchMoviesURL() {
@@ -25,6 +26,10 @@ public class Config {
 	
 	public String getAuthURL() {
 		return this.authURL;
+	}
+	
+	public String getAnalyticsURL() {
+		return this.analyticsURL;
 	}
 	
 	//read config file and create class object

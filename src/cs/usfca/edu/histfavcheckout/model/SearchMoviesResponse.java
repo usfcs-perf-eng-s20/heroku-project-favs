@@ -6,14 +6,19 @@ public class SearchMoviesResponse {
 	
 	private List<MovieData> results;
 	private boolean success;
+	
 	public List<MovieData> getResults() {
 		return results;
 	}
 	public boolean isSuccess() {
 		return success;
 	}
+	
+	public MovieData newMovieData() {
+		return new MovieData();
+	}
 
-	public class MovieData{
+	public static class MovieData{
 		private String Title;
 		private String Studio;
 		private String Price;
@@ -22,6 +27,7 @@ public class SearchMoviesResponse {
 		private String Genre;
 		private String Upc;
 		private int ID;
+		
 		public String getTitle() {
 			return Title;
 		}

@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +30,7 @@ import cs.usfca.edu.histfavcheckout.model.Product;
 import cs.usfca.edu.histfavcheckout.model.ProductRepository;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
+import cs.usfca.edu.histfavcheckout.model.TopRatedResponse;
 import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import cs.usfca.edu.histfavcheckout.model.RatingModel;
 import cs.usfca.edu.histfavcheckout.model.User;
@@ -114,14 +116,32 @@ public class HistFavCheckoutHandler {
 		for(MovieData m : searchAPIResp.getResults()) {
 			User usr = movieMap.get(m.getID());
 			String checkoutDate = getCheckoutDate(usr.getExpectedReturnDate());
-			Movie mov = checkouts.new Movie(m.getTitle(), m.getID(), checkoutDate);
+			Movie mov = checkouts.newMovie(m.getTitle(), m.getID(), checkoutDate);
 			checkouts.addMovie(mov);
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(checkouts);		
 	}
 	
-	public List<RatingModel> getTopRated(int page, int nums) {
-		return productRepository.findTopNRating(PageRequest.of(page, nums));
+	public ResponseEntity<?> getTopRated(int page, int nums) {
+		List<RatingModel> ratings = productRepository.findTopNRating(PageRequest.of(page, nums));
+		if(ratings.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie records are available!");
+		}
+		LinkedHashMap<Integer, RatingModel> ratingMap = new LinkedHashMap<Integer, RatingModel>();
+		for(RatingModel ratingModel : ratings) {
+			ratingMap.put(ratingModel.getId(), ratingModel);
+		}
+		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(ratingMap.keySet());
+		if(searchAPIResp == null) {
+			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + ratingMap.keySet());
+		}
+		List<TopRatedResponse> res =  new LinkedList<TopRatedResponse>();
+		List<MovieData> moviesData = searchAPIResp.getResults();
+		for(MovieData movie : moviesData) {
+			res.add(new TopRatedResponse(movie.getTitle(), movie.getID(),
+					ratingMap.getOrDefault(movie.getID(), new RatingModel()).getAverageRating()));
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(res);
 	}
 	
 	public OperationalResponse rate(RatingRequest request) {

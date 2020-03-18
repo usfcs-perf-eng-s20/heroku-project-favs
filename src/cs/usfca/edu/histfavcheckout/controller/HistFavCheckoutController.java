@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
+import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
@@ -73,7 +74,11 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> rateMovie(@ApiParam(value = "RatingRequest", required = true) 
 		@RequestBody RatingRequest request) {
-		return ResponseEntity.status(HttpStatus.OK).body(handler.rate(request));
+		OperationalResponse response = handler.rate(request);
+		if(response.isConfirm()) {
+			return ResponseEntity.status(HttpStatus.OK).body(handler.rate(request));
+		}
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(handler.rate(request));
 	}
 
 	@ApiOperation(value = "Get Top Rated Movies", response = List.class)
