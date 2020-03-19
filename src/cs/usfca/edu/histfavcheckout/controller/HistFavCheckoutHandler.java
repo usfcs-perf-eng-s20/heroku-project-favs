@@ -244,7 +244,8 @@ public class HistFavCheckoutHandler {
 			favesAndCheckOuts.setFavorites(favorites);
 			return ResponseEntity.status(HttpStatus.OK).body(favesAndCheckOuts);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(new FavesAndCheckOuts());
+		OperationalResponse confirm = new OperationalResponse(false, "User does not exist");
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 	}
 
 	public List<Favorites> curateFavorites(List<User> userFavorites) {
@@ -285,5 +286,5 @@ public class HistFavCheckoutHandler {
         String reportDate = df.format(c.getTime());
         return reportDate;
 	}
-	
+
 }
