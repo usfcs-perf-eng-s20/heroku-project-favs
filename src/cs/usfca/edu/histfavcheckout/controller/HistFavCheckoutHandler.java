@@ -266,18 +266,19 @@ public class HistFavCheckoutHandler {
 				if (inventoryRepository.updateAvailableCopies(record.getAvailableCopies(), record.getProductId()) == 1) {
 					confirm.setConfirm(true);
 					confirm.setMessage("Movie returned successfully");
-					System.out.println("SUCCESS");
 					return ResponseEntity.status(HttpStatus.OK).body(confirm);
 				}
 				confirm.setMessage("Could not update inventory table");
-				System.out.println("INVENTORY SET UPDATE != 1");
 			} else {
-				System.out.println("USER SET UPDATE != 1");
-				confirm.setMessage("Could not update user table");
+				if(!u.isCheckouts()) {
+					confirm.setMessage(String.format("user has not checked out the concerned movie : %d", movieId));
+				}
+				else {
+					confirm.setMessage("Could not update user table");
+				}
 			}
 		}
-		System.out.println("Could not find pk in user and/or inventory table");
-		if (StringUtils.isBlank(confirm.getMessage())) {
+		else {
 			confirm.setMessage("Either user or movie is not present/invalid");
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);

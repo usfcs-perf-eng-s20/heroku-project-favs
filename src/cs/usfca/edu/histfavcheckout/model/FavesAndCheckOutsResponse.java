@@ -2,7 +2,7 @@ package cs.usfca.edu.histfavcheckout.model;
 
 import java.util.List;
 
-public class FavesAndCheckOuts {
+public class FavesAndCheckOutsResponse {
     int checkouts;
     List<Favorites> favorites;
 
