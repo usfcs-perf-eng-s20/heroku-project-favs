@@ -2,14 +2,9 @@ package cs.usfca.edu.histfavcheckout.controller;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+import cs.usfca.edu.histfavcheckout.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -19,22 +14,8 @@ import org.springframework.stereotype.Component;
 
 
 import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
-import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
-import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
-import cs.usfca.edu.histfavcheckout.model.Inventory;
-import cs.usfca.edu.histfavcheckout.model.InventoryRepository;
-import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
-import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
-import cs.usfca.edu.histfavcheckout.model.Product;
-import cs.usfca.edu.histfavcheckout.model.ProductRepository;
-import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
-import cs.usfca.edu.histfavcheckout.model.TopRatedResponse;
-import cs.usfca.edu.histfavcheckout.model.RatingRequest;
-import cs.usfca.edu.histfavcheckout.model.RatingModel;
-import cs.usfca.edu.histfavcheckout.model.User;
-import cs.usfca.edu.histfavcheckout.model.UserRepository;
 
 @Component
 public class HistFavCheckoutHandler {
@@ -252,6 +233,35 @@ public class HistFavCheckoutHandler {
 		resp.setConfirm(true);
 		return resp;
 	}
+
+	public ResponseEntity<?> totalFavesAndCheckouts(int userId) {
+		if(userRepository.getUserCount(userId) > 0) {
+			int totalCheckouts = userRepository.getCheckoutCount(userId);
+			List<User> userFavorites = userRepository.getUserFavorites(userId);
+			List<Favorites> favorites = curateFavorites(userFavorites);
+			FavesAndCheckOuts favesAndCheckOuts = new FavesAndCheckOuts();
+			favesAndCheckOuts.setCheckouts(totalCheckouts);
+			favesAndCheckOuts.setFavorites(favorites);
+			return ResponseEntity.status(HttpStatus.OK).body(favesAndCheckOuts);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(new FavesAndCheckOuts());
+	}
+
+	public List<Favorites> curateFavorites(List<User> userFavorites) {
+		System.out.println("::: " + userFavorites.size());
+		List<Favorites> favorites = new ArrayList<>();
+		for(User u : userFavorites) {
+			Favorites favorite = new Favorites();
+			favorite.setMovieId(u.getId().getProductId());
+			favorite.setMovieName(String.valueOf(u.getId().getProductId()));
+			favorite.setRating(u.getRating());
+
+			favorites.add(favorite);
+			//Get or make List<Favorites>
+		}
+		return favorites;
+	}
+
 	
 	/**
 	 * gives the expected return date
@@ -275,4 +285,5 @@ public class HistFavCheckoutHandler {
         String reportDate = df.format(c.getTime());
         return reportDate;
 	}
+	
 }
