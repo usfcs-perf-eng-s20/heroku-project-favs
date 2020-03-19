@@ -235,16 +235,21 @@ public class HistFavCheckoutHandler {
 	}
 
 	public ResponseEntity<?> totalFavesAndCheckouts(int userId) {
+		OperationalResponse confirm = new OperationalResponse();
 		if(userRepository.getUserCount(userId) > 0) {
 			int totalCheckouts = userRepository.getCheckoutCount(userId);
 			List<User> userFavorites = userRepository.getUserFavorites(userId);
 			List<Favorites> favorites = curateFavorites(userFavorites);
+			if(favorites == null) {
+				confirm.setMessage("Could not retrieve movie title");
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
+			}
 			FavesAndCheckOuts favesAndCheckOuts = new FavesAndCheckOuts();
 			favesAndCheckOuts.setCheckouts(totalCheckouts);
 			favesAndCheckOuts.setFavorites(favorites);
 			return ResponseEntity.status(HttpStatus.OK).body(favesAndCheckOuts);
 		}
-		OperationalResponse confirm = new OperationalResponse(false, "User does not exist");
+		confirm.setMessage( "User does not exist");
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 	}
 
@@ -253,10 +258,13 @@ public class HistFavCheckoutHandler {
 		List<Favorites> favorites = new ArrayList<>();
 		for(User u : userFavorites) {
 			Favorites favorite = new Favorites();
+			SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(new HashSet<>(Arrays.asList(u.getId().getProductId())));
+			if(searchAPIResp == null) {
+				return null;
+			}
 			favorite.setMovieId(u.getId().getProductId());
-			favorite.setMovieName(String.valueOf(u.getId().getProductId()));
+			favorite.setMovieName(searchAPIResp.getResults().get(0).getTitle());
 			favorite.setRating(u.getRating());
-
 			favorites.add(favorite);
 			//Get or make List<Favorites>
 		}
