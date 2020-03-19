@@ -171,7 +171,7 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> returnMovies(@ApiParam(value = "id of user", required = true) @RequestParam int userId, 
 			@ApiParam(value = "id of movie", required = true) @RequestParam int movieId) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+		return handler.returnMovie(userId, movieId);
 	}
 	
 	@ApiOperation(value = "Lets a user checkout a movie", response = String.class)
