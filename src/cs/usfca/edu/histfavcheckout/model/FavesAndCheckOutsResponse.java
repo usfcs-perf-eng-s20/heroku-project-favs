@@ -3,8 +3,8 @@ package cs.usfca.edu.histfavcheckout.model;
 import java.util.List;
 
 public class FavesAndCheckOutsResponse {
-    int checkouts;
-    List<Favorites> favorites;
+    private int checkouts;
+    private List<Favorites> favorites;
 
     public int getCheckouts() {
         return checkouts;
