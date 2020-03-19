@@ -1,9 +1,9 @@
 package cs.usfca.edu.histfavcheckout.model;
 
 public class Favorites {
-    int movieId;
-    String movieName;
-    int rating;
+    private int movieId;
+    private String movieName;
+    private int rating;
 
     public int getMovieId() {
         return movieId;

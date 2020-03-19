@@ -254,7 +254,6 @@ public class HistFavCheckoutHandler {
 	}
 
 	public List<Favorites> curateFavorites(List<User> userFavorites) {
-		System.out.println("::: " + userFavorites.size());
 		List<Favorites> favorites = new ArrayList<>();
 		for(User u : userFavorites) {
 			Favorites favorite = new Favorites();
