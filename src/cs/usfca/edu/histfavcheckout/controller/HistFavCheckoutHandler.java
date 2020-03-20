@@ -9,23 +9,35 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Optional;
 
-import cs.usfca.edu.histfavcheckout.model.*;
-import io.micrometer.core.instrument.util.StringUtils;
+import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse;
+import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
+import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
+import cs.usfca.edu.histfavcheckout.model.Inventory;
+import cs.usfca.edu.histfavcheckout.model.InventoryRepository;
+import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
+import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
+import cs.usfca.edu.histfavcheckout.model.Product;
+import cs.usfca.edu.histfavcheckout.model.ProductRepository;
+import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
+import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
+import cs.usfca.edu.histfavcheckout.model.TopRatedResponse;
+import cs.usfca.edu.histfavcheckout.model.RatingRequest;
+import cs.usfca.edu.histfavcheckout.model.RatingModel;
+import cs.usfca.edu.histfavcheckout.model.User;
+import cs.usfca.edu.histfavcheckout.model.UserRepository;
+import cs.usfca.edu.histfavcheckout.model.Favorites;
+import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-
-
 import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
-import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
-import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
+
 
 @Component
 public class HistFavCheckoutHandler {
@@ -182,7 +194,7 @@ public class HistFavCheckoutHandler {
 			user = userRepository.getOne(key);
 			if(!user.isFavourites()) {
 				product.setNumberOfFavorites(product.getNumberOfFavorites() + 1);
-			} 
+			}
 		}
 		else {
 			user = new User(key);
@@ -246,7 +258,8 @@ public class HistFavCheckoutHandler {
 
 	public ResponseEntity<?> totalFavesAndCheckouts(int userId) {
 		OperationalResponse confirm = new OperationalResponse();
-		List<User> userFavorites = userRepository.getUserFavorites(userId);
+
+		List<User> userFavorites = userRepository.findUserWithUserId(userId, Sort.by("id.productId"));
 		if(userFavorites.size() > 0) {
 			int totalCheckouts = userRepository.getCheckoutCount(userId);
 			List<Favorites> favorites = curateFavorites(userFavorites);
