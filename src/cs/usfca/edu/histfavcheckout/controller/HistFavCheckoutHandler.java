@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import io.micrometer.core.instrument.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -252,7 +253,38 @@ public class HistFavCheckoutHandler {
 		resp.setConfirm(true);
 		return resp;
 	}
-	
+
+	public ResponseEntity<?> returnMovie(int userId, int movieId) {
+		Optional<User> user = userRepository.findById(new PrimaryKey(userId, movieId));
+		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
+		OperationalResponse confirm = new OperationalResponse();
+		if(user.isPresent() && inventory.isPresent()) {
+			User u = user.get();
+			if (u.isCheckouts() && userRepository.updateCheckoutReturn(u.getId(), getCurrentDate()) == 1) {
+				Inventory record = inventory.get();
+				record.setAvailableCopies(record.getAvailableCopies() + 1);
+				if (inventoryRepository.updateAvailableCopies(record.getAvailableCopies(), record.getProductId()) == 1) {
+					confirm.setConfirm(true);
+					confirm.setMessage("Movie returned successfully");
+					return ResponseEntity.status(HttpStatus.OK).body(confirm);
+				}
+				confirm.setMessage("Could not update inventory table");
+			} else {
+				if(!u.isCheckouts()) {
+					confirm.setMessage(String.format("user has not checked out the concerned movie : %d", movieId));
+				}
+				else {
+					confirm.setMessage("Could not update user table");
+				}
+			}
+		}
+		else {
+			confirm.setMessage("Either user or movie is not present/invalid");
+		}
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
+	}
+
+
 	/**
 	 * gives the expected return date
 	 * expected return date = current date + default number of days to borrow movie  
@@ -274,5 +306,16 @@ public class HistFavCheckoutHandler {
         c.add(Calendar.DATE, -NUMBER_OF_DAYS_TO_BORROW);
         String reportDate = df.format(c.getTime());
         return reportDate;
+	}
+
+	/**
+	 * gives the current date
+	 * @return
+	 */
+	private Date getCurrentDate() {
+		Date currentDate = new Date();
+		Calendar c = Calendar.getInstance();
+		c.setTime(currentDate);
+		return c.getTime();
 	}
 }

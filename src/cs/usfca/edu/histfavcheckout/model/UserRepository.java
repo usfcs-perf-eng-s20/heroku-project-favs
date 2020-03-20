@@ -27,4 +27,9 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	
 	@Query("SELECT u FROM User u WHERE u.id.userId = :userId AND u.checkouts = :checkouts")
 	public List<User> findCheckedOutMovies(@Param("userId") int userId, @Param("checkouts") boolean checkout, Pageable pageable);
+
+	@Transactional
+	@Modifying
+	@Query("UPDATE User u SET u.actualReturnDate = :actualReturnDate WHERE u.id = :id")
+	public int updateCheckoutReturn(@Param("id") PrimaryKey id, @Param("actualReturnDate") Date actualReturnDate);
 }
