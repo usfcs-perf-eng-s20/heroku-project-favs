@@ -2,7 +2,16 @@ package cs.usfca.edu.histfavcheckout.controller;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Optional;
 
 import cs.usfca.edu.histfavcheckout.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -236,9 +245,9 @@ public class HistFavCheckoutHandler {
 
 	public ResponseEntity<?> totalFavesAndCheckouts(int userId) {
 		OperationalResponse confirm = new OperationalResponse();
-		if(userRepository.getUserCount(userId) > 0) {
+		List<User> userFavorites = userRepository.getUserFavorites(userId);
+		if(userFavorites.size() > 0) {
 			int totalCheckouts = userRepository.getCheckoutCount(userId);
-			List<User> userFavorites = userRepository.getUserFavorites(userId);
 			List<Favorites> favorites = curateFavorites(userFavorites);
 			if(favorites == null) {
 				confirm.setMessage("Could not retrieve movie title");
@@ -253,19 +262,25 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 	}
 
-	public List<Favorites> curateFavorites(List<User> userFavorites) {
+	private List<Favorites> curateFavorites(List<User> userFavorites) {
 		List<Favorites> favorites = new ArrayList<>();
+		HashMap<Integer, User> idToUser = new HashMap<>();
+
 		for(User u : userFavorites) {
+			idToUser.put(u.getId().getProductId(), u);
+		}
+
+		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(idToUser.keySet());
+		if(searchAPIResp == null) {
+			return null;
+		}
+		for(MovieData movieData : searchAPIResp.getResults()) {
+			User u = idToUser.get(movieData.getID());
 			Favorites favorite = new Favorites();
-			SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(new HashSet<>(Arrays.asList(u.getId().getProductId())));
-			if(searchAPIResp == null) {
-				return null;
-			}
-			favorite.setMovieId(u.getId().getProductId());
-			favorite.setMovieName(searchAPIResp.getResults().get(0).getTitle());
+			favorite.setMovieId(movieData.getID());
+			favorite.setMovieName(movieData.getTitle());
 			favorite.setRating(u.getRating());
 			favorites.add(favorite);
-			//Get or make List<Favorites>
 		}
 		return favorites;
 	}
