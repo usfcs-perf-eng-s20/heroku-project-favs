@@ -95,7 +95,6 @@ public class HistFavCheckoutHandler {
 	}
 	
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
-		long st = System.currentTimeMillis();
 		//System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
 				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
@@ -121,7 +120,6 @@ public class HistFavCheckoutHandler {
 			Movie mov = checkouts.newMovie(m.getTitle(), m.getID(), checkoutDate);
 			checkouts.addMovie(mov);
 		}
-		System.out.println("Elapsed time: " + (System.currentTimeMillis() - st));
 		return ResponseEntity.status(HttpStatus.OK).body(checkouts);		
 	}
 	
