@@ -264,8 +264,8 @@ public class HistFavCheckoutHandler {
 		}
 		int totalCheckouts = userRepository.getCheckoutCount(userId);
 		List<User> userFavorites = userRepository.findFavoriteMovies(userId, true, PageRequest.of(page, nums, Sort.by("id.productId")));
-
 		List<Favorites> favorites = userFavorites.size() > 0 ? curateFavorites(userFavorites) : new ArrayList<Favorites>();
+
 		if(favorites == null) {
 			confirm.setMessage("Could not retrieve movie title");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
