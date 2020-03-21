@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -15,24 +16,29 @@ import cs.usfca.edu.histfavcheckout.utils.Config;
 import cs.usfca.edu.histfavcheckout.model.AuthResponse;
 import cs.usfca.edu.histfavcheckout.model.EDRRequest;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
+import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
 
 public class APIClient {
 	
 	private static Request request = new Request();
 	private static Gson gson = new Gson();
+	private static boolean ignoreExternalAPIs = Config.config.getIgnoreExternalAPIs();
 	
 	public static SearchMoviesResponse getAllMovies(Set<Integer> movies) {
-		URL url = request.url(Config.config.getSearchMoviesURL() + movieIds(movies));
-		HttpURLConnection con = request.connect(url, "GET");
-		
-		String response = request.getResponse(con);
-		if (response != null) {
-			System.out.println("Received : " + response.toString());
-			SearchMoviesResponse resp = gson.fromJson(response.toString(), SearchMoviesResponse.class);
+		if(ignoreExternalAPIs) {
+			//TODO: Log this: System.out.println("Mocking response from search API");
+			SearchMoviesResponse resp = new SearchMoviesResponse();
+			resp.setSuccess(true);
+			resp.setResults(Collections.nCopies(movies.size(), mockMovie(movies.iterator().next())));
 			return resp;
 		}
-		else {
-			System.out.println("No response from " + url.toString());
+		URL url = request.url(Config.config.getSearchMoviesURL() + movieIds(movies));
+		HttpURLConnection con = request.connect(url, "GET");
+		String response = request.getResponse(con);
+		if (response != null) {
+			//TODO: Log this: System.out.println("Received : " + response.toString());
+			SearchMoviesResponse resp = gson.fromJson(response.toString(), SearchMoviesResponse.class);
+			return resp;
 		}
 		con.disconnect();
 		return null;
@@ -70,5 +76,18 @@ public class APIClient {
 		int responseCode = con.getResponseCode();
 		con.disconnect();
 		return responseCode;
+	}
+	
+	private static MovieData mockMovie(int validMovieID) {
+		final MovieData m = new MovieData();
+		m.setID(validMovieID);
+		m.setGenre("Action");
+		m.setPrice("10000");
+		m.setRating("5.0");
+		m.setStudio("Hist Fave Team Studios");
+		m.setTitle("Mocking You");
+		m.setUpc("AX637228");
+		m.setYear("5500");
+		return m;
 	}
 }

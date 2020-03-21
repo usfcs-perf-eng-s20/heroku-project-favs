@@ -18,6 +18,7 @@ public class Config {
 	private String searchMoviesURL;
 	private String authURL;
 	private String analyticsURL;
+	private boolean ignoreExternalAPIs;
 	
 	//getters
 	public String getSearchMoviesURL() {
@@ -30,6 +31,10 @@ public class Config {
 	
 	public String getAnalyticsURL() {
 		return this.analyticsURL;
+	}
+	
+	public boolean getIgnoreExternalAPIs() {
+		return this.ignoreExternalAPIs;
 	}
 	
 	//read config file and create class object
