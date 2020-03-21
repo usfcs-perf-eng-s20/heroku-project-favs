@@ -7,11 +7,19 @@ public class SearchMoviesResponse {
 	private List<MovieData> results;
 	private boolean success;
 	
+	public void setResults(List<MovieData> results) {
+		this.results = results;
+	}
+	
 	public List<MovieData> getResults() {
 		return results;
 	}
 	public boolean isSuccess() {
 		return success;
+	}
+	
+	public void setSuccess(boolean success) {
+		this.success = success;
 	}
 	
 	public MovieData newMovieData() {
@@ -51,6 +59,30 @@ public class SearchMoviesResponse {
 		}
 		public int getID() {
 			return ID;
+		}
+		public void setTitle(String title) {
+			Title = title;
+		}
+		public void setStudio(String studio) {
+			Studio = studio;
+		}
+		public void setPrice(String price) {
+			Price = price;
+		}
+		public void setRating(String rating) {
+			Rating = rating;
+		}
+		public void setYear(String year) {
+			Year = year;
+		}
+		public void setGenre(String genre) {
+			Genre = genre;
+		}
+		public void setUpc(String upc) {
+			Upc = upc;
+		}
+		public void setID(int iD) {
+			ID = iD;
 		}
 	}
 }
