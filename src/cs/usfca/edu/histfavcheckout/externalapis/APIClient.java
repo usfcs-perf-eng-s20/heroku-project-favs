@@ -22,10 +22,9 @@ public class APIClient {
 	
 	private static Request request = new Request();
 	private static Gson gson = new Gson();
-	private static boolean ignoreExternalAPIs = Config.config.getIgnoreExternalAPIs();
 	
 	public static SearchMoviesResponse getAllMovies(Set<Integer> movies) {
-		if(ignoreExternalAPIs) {
+		if(Config.config.getIgnoreExternalAPIs()) {
 			//TODO: Log this: System.out.println("Mocking response from search API");
 			SearchMoviesResponse resp = new SearchMoviesResponse();
 			resp.setSuccess(true);

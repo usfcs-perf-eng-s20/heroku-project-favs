@@ -2,5 +2,5 @@
 	"searchMoviesURL" : "https://perfeng-go-search.herokuapp.com/getMoviesByIds?ids=",
 	"authURL": "https://virtserver.swaggerhub.com/perfeng-loginteam/LoginService/1.0.0/isLoggedin?userId=",
 	"analyticsURL": "https://prod-analytics-boot.herokuapp.com/saveEdr",
-	"ignoreExternalAPIs": true
+	"ignoreExternalAPIs": false
 }

@@ -37,6 +37,10 @@ public class Config {
 		return this.ignoreExternalAPIs;
 	}
 	
+	public void setIgnoreExternalAPIs(boolean ignore) {
+		config.ignoreExternalAPIs = ignore;
+	}
+	
 	//read config file and create class object
 	public static Config readConfig(String path) throws IOException {
 		Gson gson = new GsonBuilder().create();

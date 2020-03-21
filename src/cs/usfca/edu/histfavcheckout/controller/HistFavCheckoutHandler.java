@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 
 import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
+import cs.usfca.edu.histfavcheckout.model.ConfigRequest;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
 import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
@@ -31,6 +32,7 @@ import cs.usfca.edu.histfavcheckout.model.Product;
 import cs.usfca.edu.histfavcheckout.model.ProductRepository;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
+import cs.usfca.edu.histfavcheckout.utils.Config;
 import cs.usfca.edu.histfavcheckout.model.TopRatedResponse;
 import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import cs.usfca.edu.histfavcheckout.model.RatingModel;
@@ -285,6 +287,11 @@ public class HistFavCheckoutHandler {
 	}
 
 
+	public ResponseEntity<?> updateConfig(ConfigRequest request) {
+		Config.config.setIgnoreExternalAPIs(request.getIgnoreExternalAPIs());
+		return ResponseEntity.status(HttpStatus.OK).body(new OperationalResponse(true, "config updated successfully"));
+	}
+	
 	/**
 	 * gives the expected return date
 	 * expected return date = current date + default number of days to borrow movie  
