@@ -28,6 +28,9 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	@Query("SELECT u FROM User u WHERE u.id.userId = :userId AND u.checkouts = :checkouts")
 	public List<User> findCheckedOutMovies(@Param("userId") int userId, @Param("checkouts") boolean checkout, Pageable pageable);
 
+	@Query("SELECT u FROM User u WHERE u.id.userId = :userId AND u.favourites = :favorite")
+	public List<User> findFavoriteMovies(@Param("userId") int userId, @Param("favorite") boolean favorite, Pageable pageable);
+
 	@Query("SELECT COUNT(*) FROM User u WHERE (u.checkouts = true) AND (u.id.userId = :userId)")
 	public int getCheckoutCount(@Param("userId") int userId);
 

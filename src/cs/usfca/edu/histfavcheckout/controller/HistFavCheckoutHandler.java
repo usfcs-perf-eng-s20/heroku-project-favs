@@ -256,24 +256,24 @@ public class HistFavCheckoutHandler {
 		return resp;
 	}
 
-	public ResponseEntity<?> totalFavesAndCheckouts(int userId) {
+	public ResponseEntity<?> totalFavesAndCheckouts(int userId, int page, int nums) {
 		OperationalResponse confirm = new OperationalResponse();
-
-		List<User> userFavorites = userRepository.findUserWithUserId(userId, Sort.by("id.productId"));
-		if(userFavorites.size() > 0) {
-			int totalCheckouts = userRepository.getCheckoutCount(userId);
-			List<Favorites> favorites = curateFavorites(userFavorites);
-			if(favorites == null) {
-				confirm.setMessage("Could not retrieve movie title");
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
-			}
-			FavesAndCheckOuts favesAndCheckOuts = new FavesAndCheckOuts();
-			favesAndCheckOuts.setCheckouts(totalCheckouts);
-			favesAndCheckOuts.setFavorites(favorites);
-			return ResponseEntity.status(HttpStatus.OK).body(favesAndCheckOuts);
+		if(userRepository.findUserWithUserId(userId, Sort.by("id.productId")).size() == 0) {
+			confirm.setMessage( "User does not exist");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 		}
-		confirm.setMessage( "User does not exist");
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
+		int totalCheckouts = userRepository.getCheckoutCount(userId);
+		List<User> userFavorites = userRepository.findFavoriteMovies(userId, true, PageRequest.of(page, nums, Sort.by("id.productId")));
+
+		List<Favorites> favorites = userFavorites.size() > 0 ? curateFavorites(userFavorites) : new ArrayList<Favorites>();
+		if(favorites == null) {
+			confirm.setMessage("Could not retrieve movie title");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
+		}
+		FavesAndCheckOuts favesAndCheckOuts = new FavesAndCheckOuts();
+		favesAndCheckOuts.setCheckouts(totalCheckouts);
+		favesAndCheckOuts.setFavorites(favorites);
+		return ResponseEntity.status(HttpStatus.OK).body(favesAndCheckOuts);
 	}
 
 	private List<Favorites> curateFavorites(List<User> userFavorites) {
