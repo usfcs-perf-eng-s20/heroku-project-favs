@@ -25,7 +25,6 @@ public class APIClient {
 	
 	public static SearchMoviesResponse getAllMovies(Set<Integer> movies) {
 		if(Config.config.getIgnoreExternalAPIs()) {
-			//TODO: Log this: System.out.println("Mocking response from search API");
 			SearchMoviesResponse resp = new SearchMoviesResponse();
 			resp.setSuccess(true);
 			resp.setResults(Collections.nCopies(movies.size(), mockMovie(movies.iterator().next())));
@@ -56,6 +55,9 @@ public class APIClient {
 	}
 	
 	public static boolean isAuthenticated(int userId) throws IOException {
+		if(Config.config.getIgnoreExternalAPIs()) {
+			return true;
+		}
 		URL url = new URL(Config.config.getAuthURL() + userId);
 		HttpURLConnection con = request.connect(url, "GET");
 		String response = request.getResponse(con);
@@ -69,6 +71,9 @@ public class APIClient {
 	}
 	
 	public static int sendEDR(EDRRequest edrRequest) throws IOException {
+		if(Config.config.getIgnoreExternalAPIs()) {
+			return HttpURLConnection.HTTP_OK;
+		}
 		URL url = new URL(Config.config.getAnalyticsURL());
 		HttpURLConnection con = request.connect(url, "POST", MediaType.APPLICATION_JSON_VALUE, null);
 		request.writeToBody(con, gson.toJson(edrRequest));
