@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
 import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
+import cs.usfca.edu.histfavcheckout.model.ConfigRequest;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
@@ -224,5 +225,11 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> postMovie(@RequestBody Product movie) {
 		return handler.addMovie(movie);
+	}
+	
+	@PutMapping(value = "/config")
+	@ResponseBody()
+	public ResponseEntity<?> updateConfig(@RequestBody ConfigRequest request) {
+		return handler.updateConfig(request);
 	}
 }
