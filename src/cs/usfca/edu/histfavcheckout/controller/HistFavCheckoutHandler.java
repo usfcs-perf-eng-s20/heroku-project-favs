@@ -8,18 +8,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 
-import io.micrometer.core.instrument.util.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-
-
-import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
 import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
@@ -36,6 +27,17 @@ import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import cs.usfca.edu.histfavcheckout.model.RatingModel;
 import cs.usfca.edu.histfavcheckout.model.User;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
+import cs.usfca.edu.histfavcheckout.model.Favorites;
+import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
+
 
 @Component
 public class HistFavCheckoutHandler {
@@ -192,7 +194,7 @@ public class HistFavCheckoutHandler {
 			user = userRepository.getOne(key);
 			if(!user.isFavourites()) {
 				product.setNumberOfFavorites(product.getNumberOfFavorites() + 1);
-			} 
+			}
 		}
 		else {
 			user = new User(key);
@@ -254,6 +256,50 @@ public class HistFavCheckoutHandler {
 		return resp;
 	}
 
+	public ResponseEntity<?> totalFavesAndCheckouts(int userId, int page, int nums) {
+		OperationalResponse confirm = new OperationalResponse();
+		if(userRepository.findUserWithUserId(userId, Sort.by("id.productId")).size() == 0) {
+			confirm.setMessage( "User does not exist");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
+		}
+		int totalCheckouts = userRepository.getCheckoutCount(userId);
+		List<User> userFavorites = userRepository.findFavoriteMovies(userId, true, PageRequest.of(page, nums, Sort.by("id.productId")));
+		List<Favorites> favorites = userFavorites.size() > 0 ? curateFavorites(userFavorites) : new ArrayList<Favorites>();
+
+		if(favorites == null) {
+			confirm.setMessage("Could not retrieve movie title");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
+		}
+		FavesAndCheckOuts favesAndCheckOuts = new FavesAndCheckOuts();
+		favesAndCheckOuts.setCheckouts(totalCheckouts);
+		favesAndCheckOuts.setFavorites(favorites);
+		return ResponseEntity.status(HttpStatus.OK).body(favesAndCheckOuts);
+	}
+
+	private List<Favorites> curateFavorites(List<User> userFavorites) {
+		List<Favorites> favorites = new ArrayList<>();
+		HashMap<Integer, User> idToUser = new HashMap<>();
+
+		for(User u : userFavorites) {
+			idToUser.put(u.getId().getProductId(), u);
+		}
+
+		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(idToUser.keySet());
+		if(searchAPIResp == null) {
+			return null;
+		}
+		for(MovieData movieData : searchAPIResp.getResults()) {
+			User u = idToUser.get(movieData.getID());
+			Favorites favorite = new Favorites();
+			favorite.setMovieId(movieData.getID());
+			favorite.setMovieName(movieData.getTitle());
+			favorite.setRating(u.getRating());
+			favorites.add(favorite);
+		}
+		return favorites;
+	}
+
+	
 	public ResponseEntity<?> returnMovie(int userId, int movieId) {
 		Optional<User> user = userRepository.findById(new PrimaryKey(userId, movieId));
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
@@ -284,7 +330,6 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 	}
 
-
 	/**
 	 * gives the expected return date
 	 * expected return date = current date + default number of days to borrow movie  
@@ -307,7 +352,7 @@ public class HistFavCheckoutHandler {
         String reportDate = df.format(c.getTime());
         return reportDate;
 	}
-
+  
 	/**
 	 * gives the current date
 	 * @return

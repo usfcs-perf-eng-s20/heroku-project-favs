@@ -137,8 +137,10 @@ public class HistFavCheckoutController {
     })
 	@GetMapping(value = "/totalFavesAndCheckouts")
 	@ResponseBody()
-	public ResponseEntity<?> totalFavesAndCheckouts(@ApiParam(value = "id of user", required = true) @RequestParam int userId) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+	public ResponseEntity<?> totalFavesAndCheckouts(@ApiParam(value = "id of user", required = true) @RequestParam int userId,
+					@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page,
+					@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
+		return handler.totalFavesAndCheckouts(userId, page, nums);
 	}
 	
 	@ApiOperation(value = "Returns details of all movies a user has checked out", response = List.class)
