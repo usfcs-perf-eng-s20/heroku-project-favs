@@ -3,11 +3,13 @@ package cs.usfca.edu.histfavcheckout.controller;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -147,6 +149,36 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(res);
 	}
 	
+	public ResponseEntity<?> getTopUsers(String selected, int page, int nums) {
+		List<User> users = new ArrayList<>();
+		if(selected.equals("checkout")) {
+			users = userRepository.findUserCheckouts(true);
+		}
+		else if(selected.equals("faves")) {
+			users = userRepository.findUserFavourites(true);
+		}
+		else if(selected.equals("ratings")){
+			users = userRepository.findTopRaters();
+		}
+		LinkedHashMap<Integer, Integer> uniqueId = new LinkedHashMap<>();
+		for(User user: users) {
+			if(!uniqueId.containsKey(user.getId().getUserId())) {
+				uniqueId.put(user.getId().getUserId(), 1);
+			} else {
+				uniqueId.put(user.getId().getUserId(), uniqueId.get(user.getId().getUserId()) + 1);
+			}
+		}
+		List<Entry<Integer,Integer>> result = new ArrayList<>(uniqueId.entrySet());
+		result.sort(Entry.comparingByValue());
+		Collections.reverse(result);
+		if(page == 0) {
+			result = result.subList(0, nums);
+		}
+		else if(page*nums-1<=result.size()) {
+			result = result.subList(0, page*nums);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(result);
+	}
 	public OperationalResponse rate(RatingRequest request) {
 		if(request.getRating() > 5 || request.getRating() < 0) {
 			// log here: invalid rating.

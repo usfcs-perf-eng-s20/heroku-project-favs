@@ -38,4 +38,13 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	@Modifying
 	@Query("UPDATE User u SET u.actualReturnDate = :actualReturnDate WHERE u.id = :id")
 	public int updateCheckoutReturn(@Param("id") PrimaryKey id, @Param("actualReturnDate") Date actualReturnDate);
+	
+	@Query("SELECT u FROM User u where u.favourites = :favourites")
+	public List<User> findUserFavourites(@Param("favourites") boolean favorites);
+	
+	@Query("SELECT u FROM User u where u.checkouts = :checkouts")
+	public List<User> findUserCheckouts(@Param("checkouts") boolean checkouts);
+	
+	@Query("SELECT u FROM User u where u.rating BETWEEN 0 AND 5")
+	public List<User> findTopRaters();
 }
