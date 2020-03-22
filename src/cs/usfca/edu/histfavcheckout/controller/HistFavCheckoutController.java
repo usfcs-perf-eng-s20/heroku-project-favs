@@ -124,7 +124,7 @@ public class HistFavCheckoutController {
 	public ResponseEntity<?> getTopUsers(@ApiParam(value = "Checkouts, Faves and Ratings per user can be selected", required = true) @RequestParam String selected, 
 			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int start, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return ResponseEntity.status(HttpStatus.OK).body("Endpoint not implemented!");
+		return handler.getTopUsers(selected, start, nums);
 	}
 	
 	@ApiOperation(value = "Returns all the favorite movies and the total number of movies checked out for the user", response = List.class)
