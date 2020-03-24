@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ import cs.usfca.edu.histfavcheckout.model.AuthResponse;
 import cs.usfca.edu.histfavcheckout.model.EDRRequest;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
+import cs.usfca.edu.histfavcheckout.model.UserInfoResponse;
 
 public class APIClient {
 	
@@ -30,7 +32,7 @@ public class APIClient {
 			resp.setResults(Collections.nCopies(movies.size(), mockMovie(movies.iterator().next())));
 			return resp;
 		}
-		URL url = request.url(Config.config.getSearchMoviesURL() + movieIds(movies));
+		URL url = request.url(Config.config.getSearchMoviesURL() + generateRequestList(movies));
 		HttpURLConnection con = request.connect(url, "GET");
 		String response = request.getResponse(con);
 		if (response != null) {
@@ -42,10 +44,26 @@ public class APIClient {
 		return null;
 	}
 	
-	public static String movieIds(Set<Integer> movieIds) {
+	public static List<UserInfoResponse.UserInfo> getTopUsers(Set<Integer> userIds) {
+		if(Config.config.getIgnoreExternalAPIs()) {
+			return mockUsers(userIds);
+		}
+		URL url = request.url(Config.config.getUserInfoURL() + generateRequestList(userIds));
+		HttpURLConnection con = request.connect(url, "GET");
+		String response = request.getResponse(con);
+		if (response != null) {
+			//TODO: Log this: System.out.println("Received : " + response.toString());
+			UserInfoResponse users = gson.fromJson(response.toString(), UserInfoResponse.class);
+			return users.getUsers();
+		}
+		con.disconnect();
+		return null;
+	}
+	
+	public static String generateRequestList(Set<Integer> ids) {
 		StringBuilder result = new StringBuilder();
 		List<Integer> list = new ArrayList<>();
-		list.addAll(movieIds);
+		list.addAll(ids);
 		for(int i=0; i<list.size() - 1; i++) {
 			result.append(list.get(i));
 			result.append(",");
@@ -70,16 +88,16 @@ public class APIClient {
 		return false;
 	}
 	
-	public static int sendEDR(EDRRequest edrRequest) throws IOException {
+	public static boolean sendEDR(EDRRequest edrRequest) throws IOException {
 		if(Config.config.getIgnoreExternalAPIs()) {
-			return HttpURLConnection.HTTP_OK;
+			return true;
 		}
 		URL url = new URL(Config.config.getAnalyticsURL());
 		HttpURLConnection con = request.connect(url, "POST", MediaType.APPLICATION_JSON_VALUE, null);
 		request.writeToBody(con, gson.toJson(edrRequest));
 		int responseCode = con.getResponseCode();
 		con.disconnect();
-		return responseCode;
+		return responseCode == HttpURLConnection.HTTP_OK;
 	}
 	
 	private static MovieData mockMovie(int validMovieID) {
@@ -94,4 +112,15 @@ public class APIClient {
 		m.setYear("5500");
 		return m;
 	}
+	
+	private static List<UserInfoResponse.UserInfo> mockUsers(Set<Integer> userIds) {
+		List<UserInfoResponse.UserInfo> users = new LinkedList<UserInfoResponse.UserInfo>();
+		for(int i : userIds) {
+			UserInfoResponse.UserInfo user = new UserInfoResponse.UserInfo(i, "MockName", "mock@email.com");
+			users.add(user);
+		}
+		return users;
+	}
+	
+	
 }

@@ -122,9 +122,9 @@ public class HistFavCheckoutController {
 	@GetMapping(value = "/getTopUsers")
 	@ResponseBody()
 	public ResponseEntity<?> getTopUsers(@ApiParam(value = "Checkouts, Faves and Ratings per user can be selected", required = true) @RequestParam String selected, 
-			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int start, 
+			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return handler.getTopUsers(selected, start, nums);
+		return handler.getTopUsers(selected, page, nums);
 	}
 	
 	@ApiOperation(value = "Returns all the favorite movies and the total number of movies checked out for the user", response = List.class)

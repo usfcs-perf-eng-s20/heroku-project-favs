@@ -38,20 +38,15 @@ import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
 import cs.usfca.edu.histfavcheckout.utils.Config;
 import cs.usfca.edu.histfavcheckout.model.TopRatedResponse;
+import cs.usfca.edu.histfavcheckout.model.TopUser;
+import cs.usfca.edu.histfavcheckout.model.TopUserResponse;
 import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import cs.usfca.edu.histfavcheckout.model.RatingModel;
 import cs.usfca.edu.histfavcheckout.model.User;
+import cs.usfca.edu.histfavcheckout.model.UserInfoResponse;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
 import cs.usfca.edu.histfavcheckout.model.Favorites;
 import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 
 
 @Component
@@ -163,35 +158,31 @@ public class HistFavCheckoutHandler {
 	}
 	
 	public ResponseEntity<?> getTopUsers(String selected, int page, int nums) {
-		List<User> users = new ArrayList<>();
-		if(selected.equals("checkout")) {
-			users = userRepository.findUserCheckouts(true);
+		List<TopUser> users = new ArrayList<>();
+		if(selected.equals("checkouts")) {
+			users = userRepository.getTopUserCheckouts(PageRequest.of(page, nums));
 		}
-		else if(selected.equals("faves")) {
-			users = userRepository.findUserFavourites(true);
+		else if(selected.equals("favs")) {
+			users = userRepository.getTopUserFavourites(PageRequest.of(page, nums));
 		}
 		else if(selected.equals("ratings")){
-			users = userRepository.findTopRaters();
+			users = userRepository.getTopRaters(PageRequest.of(page, nums));
 		}
-		LinkedHashMap<Integer, Integer> uniqueId = new LinkedHashMap<>();
-		for(User user: users) {
-			if(!uniqueId.containsKey(user.getId().getUserId())) {
-				uniqueId.put(user.getId().getUserId(), 1);
-			} else {
-				uniqueId.put(user.getId().getUserId(), uniqueId.get(user.getId().getUserId()) + 1);
-			}
+		LinkedHashMap<Integer, TopUser> topUserMap = new LinkedHashMap<Integer, TopUser>();
+		for(TopUser topUser : users) {
+			topUserMap.put(topUser.getUserId(), topUser);
 		}
-		List<Entry<Integer,Integer>> result = new ArrayList<>(uniqueId.entrySet());
-		result.sort(Entry.comparingByValue());
-		Collections.reverse(result);
-		if(page == 0) {
-			result = result.subList(0, nums);
+		List<UserInfoResponse.UserInfo> userInfos = APIClient.getTopUsers(topUserMap.keySet());
+		List<TopUserResponse> response = new LinkedList<TopUserResponse>();
+		for(UserInfoResponse.UserInfo userInfo : userInfos) {
+			response.add(new TopUserResponse(userInfo.getUserName(), 
+					userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(), 
+					topUserMap.get(userInfo.getUserId()).getCheckoutsCount(),
+					topUserMap.get(userInfo.getUserId()).getRatingsCount()));
 		}
-		else if(page*nums-1<=result.size()) {
-			result = result.subList(0, page*nums);
-		}
-		return ResponseEntity.status(HttpStatus.OK).body(result);
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
+	
 	public OperationalResponse rate(RatingRequest request) {
 		if(request.getRating() > 5 || request.getRating() < 0) {
 			// log here: invalid rating.
