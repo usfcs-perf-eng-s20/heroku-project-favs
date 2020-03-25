@@ -39,12 +39,25 @@ public interface UserRepository extends JpaRepository<User, PrimaryKey> {
 	@Query("UPDATE User u SET u.actualReturnDate = :actualReturnDate WHERE u.id = :id")
 	public int updateCheckoutReturn(@Param("id") PrimaryKey id, @Param("actualReturnDate") Date actualReturnDate);
 	
-	@Query("SELECT u FROM User u where u.favourites = :favourites")
-	public List<User> findUserFavourites(@Param("favourites") boolean favorites);
+	@Query("SELECT new cs.usfca.edu.histfavcheckout.model.TopUser(u.id.userId, "
+			+ "count(case when favourites=TRUE then 1 end) as favs, "
+			+ "count(case when checkouts=TRUE then 1 end) as checks, "
+			+ "count(case when rating > 0 then 1 end) as rates) "
+			+ "FROM User u GROUP BY u.id.userId ORDER BY favs DESC")
+	public List<TopUser> getTopUserFavourites(Pageable pageable);
 	
-	@Query("SELECT u FROM User u where u.checkouts = :checkouts")
-	public List<User> findUserCheckouts(@Param("checkouts") boolean checkouts);
+	@Query("SELECT new cs.usfca.edu.histfavcheckout.model.TopUser(u.id.userId, "
+			+ "count(case when favourites=TRUE then 1 end) as favs, "
+			+ "count(case when checkouts=TRUE then 1 end) as checks, "
+			+ "count(case when rating > 0 then 1 end) as rates) "
+			+ "FROM User u GROUP BY u.id.userId ORDER BY checks DESC")
+	public List<TopUser> getTopUserCheckouts(Pageable pageable);
 	
-	@Query("SELECT u FROM User u where u.rating BETWEEN 0 AND 5")
-	public List<User> findTopRaters();
+	@Query("SELECT new cs.usfca.edu.histfavcheckout.model.TopUser(u.id.userId, "
+			+ "count(case when favourites=TRUE then 1 end) as favs, "
+			+ "count(case when checkouts=TRUE then 1 end) as checks, "
+			+ "count(case when rating > 0 then 1 end) as rates) "
+			+ "FROM User u GROUP BY u.id.userId ORDER BY rates DESC")
+	public List<TopUser> getTopRaters(Pageable pageable);
+
 }

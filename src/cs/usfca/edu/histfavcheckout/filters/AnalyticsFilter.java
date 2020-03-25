@@ -39,8 +39,8 @@ public class AnalyticsFilter implements Filter {
 						System.currentTimeMillis() - timestamp, String.valueOf(res.getStatus()), SERVICE_NAME, 
 						success, String.valueOf(timestamp), "");
 				try {
-					int responseCode = APIClient.sendEDR(edrRequest);
-					if(responseCode != HttpURLConnection.HTTP_OK) {
+					boolean success = APIClient.sendEDR(edrRequest);
+					if(success) {
 						//System.out.println("EDR Event responded with non 200 responseCode: " + responseCode + " response!");
 						// LOG here EDR responded non 200 status and log what status was returned. 
 					}

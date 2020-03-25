@@ -7,8 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 
-import org.springframework.stereotype.Component;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -18,6 +16,7 @@ public class Config {
 	private String searchMoviesURL;
 	private String authURL;
 	private String analyticsURL;
+	private String userInfoURL;
 	private boolean ignoreExternalAPIs;
 	
 	//getters
@@ -31,6 +30,10 @@ public class Config {
 	
 	public String getAnalyticsURL() {
 		return this.analyticsURL;
+	}
+	
+	public String getUserInfoURL() {
+		return this.userInfoURL;
 	}
 	
 	public boolean getIgnoreExternalAPIs() {
