@@ -3,5 +3,8 @@
 	"authURL": "https://virtserver.swaggerhub.com/perfeng-loginteam/LoginService/1.0.0/isLoggedin?userId=",
 	"userInfoURL": "https://gentle-spire-73113.herokuapp.com//getUserInfo?userId=",
 	"analyticsURL": "https://prod-analytics-boot.herokuapp.com/saveEdr",
-	"ignoreExternalAPIs": false
+	"useFavesAPIs":true,
+	"useSearchAPIs": true,
+	"useLoginAPIs": true,
+	"useAnalyticsAPIs": true
 }
