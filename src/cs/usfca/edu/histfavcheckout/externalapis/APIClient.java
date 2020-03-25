@@ -26,7 +26,7 @@ public class APIClient {
 	private static Gson gson = new Gson();
 	
 	public static SearchMoviesResponse getAllMovies(Set<Integer> movies) {
-		if(Config.config.getIgnoreExternalAPIs()) {
+		if(!Config.config.getUseSearchAPIs()) {
 			SearchMoviesResponse resp = new SearchMoviesResponse();
 			resp.setSuccess(true);
 			resp.setResults(Collections.nCopies(movies.size(), mockMovie(movies.iterator().next())));
@@ -45,7 +45,7 @@ public class APIClient {
 	}
 	
 	public static List<UserInfoResponse.UserInfo> getTopUsers(Set<Integer> userIds) {
-		if(Config.config.getIgnoreExternalAPIs()) {
+		if(!Config.config.getUseLoginAPIs()) {
 			return mockUsers(userIds);
 		}
 		URL url = request.url(Config.config.getUserInfoURL() + generateRequestList(userIds));
@@ -73,7 +73,7 @@ public class APIClient {
 	}
 	
 	public static boolean isAuthenticated(int userId) throws IOException {
-		if(Config.config.getIgnoreExternalAPIs()) {
+		if(!Config.config.getUseLoginAPIs()) {
 			return true;
 		}
 		URL url = new URL(Config.config.getAuthURL() + userId);
@@ -89,7 +89,7 @@ public class APIClient {
 	}
 	
 	public static boolean sendEDR(EDRRequest edrRequest) throws IOException {
-		if(Config.config.getIgnoreExternalAPIs()) {
+		if(!Config.config.getUseAnalyticsAPIs()) {
 			return true;
 		}
 		URL url = new URL(Config.config.getAnalyticsURL());

@@ -367,8 +367,10 @@ public class HistFavCheckoutHandler {
 	}
 
 	public ResponseEntity<?> updateConfig(ConfigRequest request) {
-		Config.config.setIgnoreExternalAPIs(request.getIgnoreExternalAPIs());
-		return ResponseEntity.status(HttpStatus.OK).body(new OperationalResponse(true, "config updated successfully"));
+		Config.config.setUseLoginAPIs(request.getLogin());
+		Config.config.setUseSearchAPIs(request.getSearch());
+		Config.config.setUseAnalyticsAPIs(request.getAnalytics());
+		return ResponseEntity.status(HttpStatus.OK).body(new OperationalResponse(true, "Config updated successfully"));
 	}
 	
 	/**

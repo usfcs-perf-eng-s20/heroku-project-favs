@@ -17,8 +17,10 @@ public class Config {
 	private String authURL;
 	private String analyticsURL;
 	private String userInfoURL;
-	private boolean ignoreExternalAPIs;
-	
+	private boolean useFavesAPIs;
+	private boolean useSearchAPIs;
+	private boolean useLoginAPIs;
+	private boolean useAnalyticsAPIs;
 	//getters
 	public String getSearchMoviesURL() {
 		return this.searchMoviesURL;
@@ -36,12 +38,34 @@ public class Config {
 		return this.userInfoURL;
 	}
 	
-	public boolean getIgnoreExternalAPIs() {
-		return this.ignoreExternalAPIs;
+	public boolean getUseFavesAPIs() {
+		return this.useFavesAPIs;
 	}
 	
-	public void setIgnoreExternalAPIs(boolean ignore) {
-		config.ignoreExternalAPIs = ignore;
+	public void setUseFavesAPIs(boolean value) {
+		config.useFavesAPIs = value;
+	}
+	
+	public boolean getUseSearchAPIs() {
+		return this.useSearchAPIs;
+	}
+	
+	public void setUseSearchAPIs(boolean value) {
+		config.useSearchAPIs = value;
+	}
+	public boolean getUseLoginAPIs() {
+		return this.useLoginAPIs;
+	}
+	
+	public void setUseLoginAPIs(boolean value) {
+		config.useLoginAPIs = value;
+	}
+	public boolean getUseAnalyticsAPIs() {
+		return this.useAnalyticsAPIs;
+	}
+	
+	public void setUseAnalyticsAPIs(boolean value) {
+		config.useAnalyticsAPIs = value;
 	}
 	
 	//read config file and create class object
