@@ -28,7 +28,7 @@ public class Request {
 			con.setRequestMethod(requestMethod);
 		} 
 		catch (IOException e) {
-//			e.printStackTrace();
+			e.printStackTrace();
 		}
 		return con;
 	}
@@ -44,7 +44,7 @@ public class Request {
 				con.setRequestProperty("Authorization", authorization);
 		} 
 		catch (IOException e) {
-//			e.printStackTrace();
+			e.printStackTrace();
 		}
 		return con;
 	}

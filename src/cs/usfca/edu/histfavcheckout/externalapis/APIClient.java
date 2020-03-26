@@ -36,7 +36,7 @@ public class APIClient {
 		HttpURLConnection con = request.connect(url, "GET");
 		String response = request.getResponse(con);
 		if (response != null) {
-			//TODO: Log this: System.out.println("Received : " + response.toString());
+			System.out.println("Received : " + response.toString());
 			SearchMoviesResponse resp = gson.fromJson(response.toString(), SearchMoviesResponse.class);
 			return resp;
 		}
@@ -52,7 +52,7 @@ public class APIClient {
 		HttpURLConnection con = request.connect(url, "GET");
 		String response = request.getResponse(con);
 		if (response != null) {
-			//TODO: Log this: System.out.println("Received : " + response.toString());
+			System.out.println("Received : " + response.toString());
 			UserInfoResponse users = gson.fromJson(response.toString(), UserInfoResponse.class);
 			return users.getUsers();
 		}

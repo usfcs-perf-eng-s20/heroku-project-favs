@@ -3,18 +3,14 @@ package cs.usfca.edu.histfavcheckout.controller;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.ArrayList;
 import java.util.Optional;
 
-
-import io.micrometer.core.instrument.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -72,6 +68,7 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> addInventory(Inventory inventory) {
 		Optional<Product> product = productRepository.findById(inventory.getProductId());
 		if(!product.isPresent()) {
+			System.out.println("Invalid movie Id: " + inventory.getProductId());
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Request unsuccessful. Invalid movie Id.");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(inventoryRepository.save(inventory));
@@ -80,6 +77,7 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> getInventory(int movieId) {
 		Optional<Inventory> inv = inventoryRepository.findById(movieId);
 		if(!inv.isPresent()) {
+			System.out.println("Record does not exist at movieId: " + movieId);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Record does not exist!");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(inv.get());
@@ -88,6 +86,7 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> addMovie(Product movie) {
 		Optional<Product> product = productRepository.findById(movie.getId());
 		if(product.isPresent()) {
+			System.out.println(String.format("MovieId: %d was added previously", movie.getId()));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie has been added previously.");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(productRepository.save(movie));
@@ -96,6 +95,7 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> getMovie(int movieId) {
 		Optional<Product> product = productRepository.findById(movieId);
 		if(!product.isPresent()) {
+			System.out.println(String.format("MovieId: %d does not exist", movieId));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie does not exist!");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(product.get());
@@ -107,25 +107,25 @@ public class HistFavCheckoutHandler {
 	}
 	
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
-		//System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
+		System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
 				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
 		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
 		if(userCheckedOutMovies.size() == 0) {
-			//System.out.println("Returning! No valid data for user");
+			System.out.println("Returning! No valid data for user");
 			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 		}
 		LinkedHashMap<Integer, User> movieMap = new LinkedHashMap();
 		for(User u: userCheckedOutMovies) {
 			movieMap.put(u.getId().getProductId(), u);
 		}
-		//System.out.println("Calling search APIs");
+		System.out.println("Calling search APIs");
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
 		if(searchAPIResp == null) {
-			//System.out.println("Returning! Search API had no data for user checkedout movies");
+			System.out.println("Returning! Search API had no data for user checkedout movies");
 			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 		}
-		//System.out.println("Returning from Search APIs");
+		System.out.println("Returning from Search APIs");
 		for(MovieData m : searchAPIResp.getResults()) {
 			User usr = movieMap.get(m.getID());
 			String checkoutDate = getCheckoutDate(usr.getExpectedReturnDate());
@@ -138,6 +138,7 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> getTopRated(int page, int nums) {
 		List<RatingModel> ratings = productRepository.findTopNRating(PageRequest.of(page, nums));
 		if(ratings.isEmpty()) {
+			System.out.println("No movie records are available!");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie records are available!");
 		}
 		LinkedHashMap<Integer, RatingModel> ratingMap = new LinkedHashMap<Integer, RatingModel>();
@@ -146,6 +147,7 @@ public class HistFavCheckoutHandler {
 		}
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(ratingMap.keySet());
 		if(searchAPIResp == null) {
+			System.out.println("Search returned no information for ids: " + ratingMap.keySet());
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + ratingMap.keySet());
 		}
 		List<TopRatedResponse> res =  new LinkedList<TopRatedResponse>();
@@ -168,6 +170,10 @@ public class HistFavCheckoutHandler {
 		else if(selected.equals("ratings")){
 			users = userRepository.getTopRaters(PageRequest.of(page, nums));
 		}
+		if(users.isEmpty()) {
+			System.out.println("No users are available");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No users are available");
+		}
 		LinkedHashMap<Integer, TopUser> topUserMap = new LinkedHashMap<Integer, TopUser>();
 		for(TopUser topUser : users) {
 			topUserMap.put(topUser.getUserId(), topUser);
@@ -185,7 +191,7 @@ public class HistFavCheckoutHandler {
 	
 	public OperationalResponse rate(RatingRequest request) {
 		if(request.getRating() > 5 || request.getRating() < 0) {
-			// log here: invalid rating.
+			System.out.println("Invalid rating! Rating must be between 0 and 5");
 			return new OperationalResponse(false, "Invalid rating! rating must be between 0 and 5");
 		}
 		User user;
@@ -221,18 +227,22 @@ public class HistFavCheckoutHandler {
 		Product product;
 		PrimaryKey key = new PrimaryKey(request.getUserId(), request.getMovieId());
 		if(productRepository.existsById(request.getMovieId())) {
+			System.out.println("Movie exist");
 			product = productRepository.getOne(request.getMovieId());
 		} 
 		else {
+			System.out.println("Ading new movie to database");
 			product = new Product(request.getMovieId());
 		}
 		if(userRepository.existsById(key)) {
+			System.out.println("User exist");
 			user = userRepository.getOne(key);
 			if(!user.isFavourites()) {
 				product.setNumberOfFavorites(product.getNumberOfFavorites() + 1);
 			}
 		}
 		else {
+			System.out.println("Creating new user");
 			user = new User(key);
 			product.setNumberOfFavorites(product.getNumberOfFavorites() + 1);
 		}
@@ -260,7 +270,7 @@ public class HistFavCheckoutHandler {
 		int updated = 0;
 		updated = inventoryRepository.updateAvailableCopies(availableCopies, record.getProductId());
 		if(updated < 1) {
-			// TODO: Add logs here saying for some reason server was unable to reduce available copies
+			System.out.println("Server unable to reduce available copies.");
 			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
 			return resp;
 		}
@@ -277,7 +287,7 @@ public class HistFavCheckoutHandler {
 				theUser.setExpectedReturnDate(getExpectedReturnDate());
 				updated = userRepository.updateCheckoutDetails(theUser.isCheckouts(), theUser.getExpectedReturnDate(), pk);
 				if(updated < 1) {
-					// TODO: Add logs here saying for some reason server was unable to reduce available copies
+					System.out.println("Server unable to reduce available copies.");
 					//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
 					return resp;
 				}
@@ -295,6 +305,7 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> totalFavesAndCheckouts(int userId, int page, int nums) {
 		OperationalResponse confirm = new OperationalResponse();
 		if(userRepository.findUserWithUserId(userId, Sort.by("id.productId")).size() == 0) {
+			System.out.println("UserId not found");
 			confirm.setMessage( "User does not exist");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 		}
@@ -303,6 +314,7 @@ public class HistFavCheckoutHandler {
 		List<Favorites> favorites = userFavorites.size() > 0 ? curateFavorites(userFavorites) : new ArrayList<Favorites>();
 
 		if(favorites == null) {
+			System.out.println("Could not retrieve movie title for userId:" + userId);
 			confirm.setMessage("Could not retrieve movie title");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 		}
@@ -347,20 +359,25 @@ public class HistFavCheckoutHandler {
 				record.setAvailableCopies(record.getAvailableCopies() + 1);
 				if (inventoryRepository.updateAvailableCopies(record.getAvailableCopies(), record.getProductId()) == 1) {
 					confirm.setConfirm(true);
+					System.out.println("Movie returned successfully");
 					confirm.setMessage("Movie returned successfully");
 					return ResponseEntity.status(HttpStatus.OK).body(confirm);
 				}
+				System.out.println("Could not update inventory table");
 				confirm.setMessage("Could not update inventory table");
 			} else {
 				if(!u.isCheckouts()) {
+					System.out.println(String.format("user has not checked out the concerned movie : %d", movieId));
 					confirm.setMessage(String.format("user has not checked out the concerned movie : %d", movieId));
 				}
 				else {
+					System.out.println("Could not update user table");
 					confirm.setMessage("Could not update user table");
 				}
 			}
 		}
 		else {
+			System.out.println("Either user or movie is not present/invalid");
 			confirm.setMessage("Either user or movie is not present/invalid");
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);

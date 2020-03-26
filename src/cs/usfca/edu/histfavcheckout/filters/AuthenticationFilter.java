@@ -28,7 +28,7 @@ public class AuthenticationFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
-		//TODO: LOG this: "==============> Auth Filter Executed <==============="
+		System.out.println("==============> Auth Filter Executed <===============");
 		HttpServletResponse res = (HttpServletResponse) response;
 		MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest((HttpServletRequest) request);
 		String userParam = multiReadRequest.getParameter("userId");
