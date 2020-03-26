@@ -169,8 +169,8 @@ public class HistFavCheckoutController {
     })
 	@PutMapping(value = "/returnMovie")
 	@ResponseBody()
-	public ResponseEntity<?> returnMovies(@RequestBody PrimaryKey primaryKey) {
-		return handler.returnMovie(primaryKey.getUserId(), primaryKey.getProductId());
+	public ResponseEntity<?> returnMovies(@RequestBody OperationalRequest request) {
+		return handler.returnMovie(request.getUserId(), request.getMovieId());
 	}
 	
 	@ApiOperation(value = "Lets a user checkout a movie", response = String.class)
