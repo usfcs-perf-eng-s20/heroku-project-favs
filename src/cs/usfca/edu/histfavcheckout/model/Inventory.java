@@ -17,8 +17,10 @@ public class Inventory {
 	
 	public Inventory() {}
 	
-	public Inventory(int productId) {
+	public Inventory(int productId, int totalCopies, int availableCopies) {
 		this.productId = productId;
+		this.totalNumberOfCopies = totalCopies;
+		this.availableCopies = availableCopies;
 	}
 	
 	public int getProductId() {

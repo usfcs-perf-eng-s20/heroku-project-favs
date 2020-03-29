@@ -11,7 +11,7 @@ public class IncludeFilters {
 		FilterRegistrationBean<AuthenticationFilter> bean = new FilterRegistrationBean<>();
 		bean.setFilter(new AuthenticationFilter());
 		bean.addUrlPatterns("/rateMovie", "/totalFavesAndCheckouts", "/checkedOutMovies", 
-				"/returnMovies", "/checkOutMovies", "/user", "/favoriteMovie");
+				"/returnMovie", "/checkOutMovie", "/user", "/favoriteMovie");
 		return bean;
 	}
 	

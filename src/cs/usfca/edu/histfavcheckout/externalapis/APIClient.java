@@ -38,7 +38,9 @@ public class APIClient {
 		if (response != null) {
 			//TODO: Log this: System.out.println("Received : " + response.toString());
 			SearchMoviesResponse resp = gson.fromJson(response.toString(), SearchMoviesResponse.class);
-			return resp;
+			if(resp.getResults() != null) {
+				return resp;
+			}
 		}
 		con.disconnect();
 		return null;
