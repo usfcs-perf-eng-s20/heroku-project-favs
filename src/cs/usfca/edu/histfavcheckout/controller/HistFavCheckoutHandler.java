@@ -245,11 +245,12 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> checkout(OperationalRequest request) {
 		int movieId = request.getMovieId();
 		int userId = request.getUserId();
-		Inventory record = null;
-		User user;
 		PrimaryKey pk = new PrimaryKey(userId, movieId);
+		Optional<Inventory> record = inventoryRepository.findById(movieId);
+		Optional<User> user = userRepository.findById(pk);
+		User u;
 		OperationalResponse resp = new OperationalResponse(false);
-		if(!inventoryRepository.existsById(movieId)) {
+		if(!record.isPresent()) {
 			HashSet<Integer> s = new HashSet<Integer>();
 			s.add(movieId);
 			SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(s);
@@ -257,31 +258,30 @@ public class HistFavCheckoutHandler {
 				resp.setMessage("Search API has no record for Movie with Id " + movieId);
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resp);
 			}
-			record = new Inventory(movieId, DEFAULT_NUM_OF_MOVIES, DEFAULT_NUM_OF_MOVIES);
 		}
-		record = (record == null) ? inventoryRepository.getOne(movieId) : record;
-		if(record.getAvailableCopies() < 1) {
+		Inventory inv = (record.isPresent()) ? record.get() : new Inventory(movieId, DEFAULT_NUM_OF_MOVIES, DEFAULT_NUM_OF_MOVIES);
+		if(inv.getAvailableCopies() < 1) {
 			resp.setMessage("All copies of movie with Id " + movieId + " have been rented to others");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resp);
 		}
-		record.setAvailableCopies(record.getAvailableCopies() - 1);
-		if(userRepository.existsById(pk)) {
-			user = userRepository.getOne(pk);
-			if(!user.isCheckouts()) {
-				user.setCheckouts(true);
-				user.setExpectedReturnDate(getExpectedReturnDate());
+		inv.setAvailableCopies(inv.getAvailableCopies() - 1);
+		if(user.isPresent()) {
+			u = user.get();
+			if(!u.isCheckouts()) {
+				u.setCheckouts(true);
+				u.setExpectedReturnDate(getExpectedReturnDate());
 			}
 			else {
 				resp.setMessage("user " + userId + " must return this movie before they can check it out again.");
 				return ResponseEntity.status(HttpStatus.OK).body(resp);
 			}
 		} else {
-			user = new User(pk);
-			user.setCheckouts(true);
-			user.setExpectedReturnDate(getExpectedReturnDate());
+			u = new User(pk);
+			u.setCheckouts(true);
+			u.setExpectedReturnDate(getExpectedReturnDate());
 		}
-		inventoryRepository.save(record);
-		userRepository.save(user);
+		inventoryRepository.save(inv);
+		userRepository.save(u);
 		return ResponseEntity.status(HttpStatus.OK).body(new OperationalResponse(true, "Movie Checked Out Successfully"));
 	}
 
