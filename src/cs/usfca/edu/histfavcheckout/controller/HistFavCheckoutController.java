@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,6 +28,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/")
 @Api(value = "Video Rental System", description = "APIs owned by the Faves Team")
@@ -185,10 +187,10 @@ public class HistFavCheckoutController {
         @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
 
     })
-	@PutMapping(value = "/checkOutMovies")
+	@PutMapping(value = "/checkOutMovie")
 	@ResponseBody()
-	public ResponseEntity<?> checkOutMovies(@RequestBody OperationalRequest request) {
-		return ResponseEntity.status(HttpStatus.OK).body(handler.checkout(request));
+	public ResponseEntity<?> checkOutMovie(@RequestBody OperationalRequest request) {
+		return handler.checkout(request);
 	}
 	
 	@GetMapping(value = "/user")

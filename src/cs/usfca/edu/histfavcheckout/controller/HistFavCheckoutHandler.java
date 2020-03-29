@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,6 +54,7 @@ import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
 public class HistFavCheckoutHandler {
 	
 	public static int NUMBER_OF_DAYS_TO_BORROW = 15;
+	public static int DEFAULT_NUM_OF_MOVIES = 10000;
 	
 	@Autowired
 	private UserRepository userRepository;
@@ -107,12 +109,11 @@ public class HistFavCheckoutHandler {
 	}
 	
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
-		//System.out.println("userId: " + userId + " page: " + page + " nums: " + nums);
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
 				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
+		OperationalResponse confirm = new OperationalResponse();
 		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
 		if(userCheckedOutMovies.size() == 0) {
-			//System.out.println("Returning! No valid data for user");
 			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 		}
 		LinkedHashMap<Integer, User> movieMap = new LinkedHashMap();
@@ -122,10 +123,9 @@ public class HistFavCheckoutHandler {
 		//System.out.println("Calling search APIs");
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
 		if(searchAPIResp == null) {
-			//System.out.println("Returning! Search API had no data for user checkedout movies");
-			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
+			confirm.setMessage("Search returned no information for ids: " + movieMap.keySet());
+			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body(confirm);
 		}
-		//System.out.println("Returning from Search APIs");
 		for(MovieData m : searchAPIResp.getResults()) {
 			User usr = movieMap.get(m.getID());
 			String checkoutDate = getCheckoutDate(usr.getExpectedReturnDate());
@@ -242,54 +242,47 @@ public class HistFavCheckoutHandler {
 		return new OperationalResponse(true);
 	}
 	
-	public OperationalResponse checkout(OperationalRequest request) {
+	public ResponseEntity<?> checkout(OperationalRequest request) {
 		int movieId = request.getMovieId();
 		int userId = request.getUserId();
-		OperationalResponse resp = new OperationalResponse(false);
-		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
-		if(!inventory.isPresent()) {
-			//return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie with Id " + movieId + " does not exist!");
-			return resp;
-		}
-		Inventory record = inventory.get();
-		if(record.getAvailableCopies() < 1) {
-			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No more copies of this movie available for rent. Please try again later.");
-			return resp;
-		}
-		int availableCopies = record.getAvailableCopies() - 1;
-		int updated = 0;
-		updated = inventoryRepository.updateAvailableCopies(availableCopies, record.getProductId());
-		if(updated < 1) {
-			// TODO: Add logs here saying for some reason server was unable to reduce available copies
-			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
-			return resp;
-		}
-		
-		// update user table here. Or insert new record
+		Inventory record = null;
+		User user;
 		PrimaryKey pk = new PrimaryKey(userId, movieId);
-		Optional<User> user = userRepository.findById(pk);
-		User theUser = null;
-		
-		if(user.isPresent()) {
-			theUser = user.get();
-			if(!theUser.isCheckouts()) {
-				theUser.setCheckouts(true);
-				theUser.setExpectedReturnDate(getExpectedReturnDate());
-				updated = userRepository.updateCheckoutDetails(theUser.isCheckouts(), theUser.getExpectedReturnDate(), pk);
-				if(updated < 1) {
-					// TODO: Add logs here saying for some reason server was unable to reduce available copies
-					//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to complete transaction. Please try again later.");
-					return resp;
-				}
+		OperationalResponse resp = new OperationalResponse(false);
+		if(!inventoryRepository.existsById(movieId)) {
+			HashSet<Integer> s = new HashSet<Integer>();
+			s.add(movieId);
+			SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(s);
+			if(searchAPIResp == null) {
+				resp.setMessage("Search API has no record for Movie with Id " + movieId);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resp);
+			}
+			record = new Inventory(movieId, DEFAULT_NUM_OF_MOVIES, DEFAULT_NUM_OF_MOVIES);
+		}
+		record = (record == null) ? inventoryRepository.getOne(movieId) : record;
+		if(record.getAvailableCopies() < 1) {
+			resp.setMessage("All copies of movie with Id " + movieId + " have been rented to others");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resp);
+		}
+		record.setAvailableCopies(record.getAvailableCopies() - 1);
+		if(userRepository.existsById(pk)) {
+			user = userRepository.getOne(pk);
+			if(!user.isCheckouts()) {
+				user.setCheckouts(true);
+				user.setExpectedReturnDate(getExpectedReturnDate());
+			}
+			else {
+				resp.setMessage("user " + userId + " must return this movie before they can check it out again.");
+				return ResponseEntity.status(HttpStatus.OK).body(resp);
 			}
 		} else {
-			theUser = new User(pk);
-			theUser.setCheckouts(true);
-			theUser.setExpectedReturnDate(getExpectedReturnDate());
-			userRepository.save(theUser);
+			user = new User(pk);
+			user.setCheckouts(true);
+			user.setExpectedReturnDate(getExpectedReturnDate());
 		}
-		resp.setConfirm(true);
-		return resp;
+		inventoryRepository.save(record);
+		userRepository.save(user);
+		return ResponseEntity.status(HttpStatus.OK).body(new OperationalResponse(true, "Movie Checked Out Successfully"));
 	}
 
 	public ResponseEntity<?> totalFavesAndCheckouts(int userId, int page, int nums) {
