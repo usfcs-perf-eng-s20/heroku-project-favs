@@ -168,17 +168,23 @@ public class HistFavCheckoutHandler {
 		else if(selected.equals("ratings")){
 			users = userRepository.getTopRaters(PageRequest.of(page, nums));
 		}
-		LinkedHashMap<Integer, TopUser> topUserMap = new LinkedHashMap<Integer, TopUser>();
-		for(TopUser topUser : users) {
-			topUserMap.put(topUser.getUserId(), topUser);
+		else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					new OperationalResponse(false, "selected should be one of favs, checkouts or ratings"));
 		}
-		List<UserInfoResponse.UserInfo> userInfos = APIClient.getTopUsers(topUserMap.keySet());
+		LinkedHashMap<Integer, TopUser> topUserMap = new LinkedHashMap<Integer, TopUser>();
 		List<TopUserResponse> response = new LinkedList<TopUserResponse>();
-		for(UserInfoResponse.UserInfo userInfo : userInfos) {
-			response.add(new TopUserResponse(userInfo.getUserName(), 
-					userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(), 
-					topUserMap.get(userInfo.getUserId()).getCheckoutsCount(),
-					topUserMap.get(userInfo.getUserId()).getRatingsCount()));
+		if(!users.isEmpty()) {
+			for(TopUser topUser : users) {
+				topUserMap.put(topUser.getUserId(), topUser);
+			}
+			List<UserInfoResponse.UserInfo> userInfos = APIClient.getTopUsers(topUserMap.keySet());
+			for(UserInfoResponse.UserInfo userInfo : userInfos) {
+				response.add(new TopUserResponse(userInfo.getUserName(), 
+						userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(), 
+						topUserMap.get(userInfo.getUserId()).getCheckoutsCount(),
+						topUserMap.get(userInfo.getUserId()).getRatingsCount()));
+			}
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
