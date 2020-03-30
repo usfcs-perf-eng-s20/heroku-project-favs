@@ -22,13 +22,12 @@ import cs.usfca.edu.histfavcheckout.utils.MultiReadHttpServletRequest;
 
 @Order(0)
 public class AuthenticationFilter implements Filter {
-	
+
 	private static Gson gson = new Gson();
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
-		System.out.println("==============> Auth Filter Executed <===============");
 		HttpServletResponse res = (HttpServletResponse) response;
 		MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest((HttpServletRequest) request);
 		String userParam = multiReadRequest.getParameter("userId");
@@ -51,8 +50,9 @@ public class AuthenticationFilter implements Filter {
 			chain.doFilter(multiReadRequest, response);
 		}
 		else {
+		    System.out.println(userId + " is not authorized.");
 			res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 		}
 	}
-	
+
 }

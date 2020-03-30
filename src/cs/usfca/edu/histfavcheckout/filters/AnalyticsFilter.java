@@ -39,11 +39,11 @@ public class AnalyticsFilter implements Filter {
 						success, String.valueOf(timestamp), "");
 				try {
 					boolean success = APIClient.sendEDR(edrRequest);
-					if(success) {
-						System.out.println("EDR Event responded with non 200 responseCode: " + res.getStatus() + " response!");
+					if(!success) {
+						System.out.println("EDR Event responded with responseCode: " + res.getStatus());
 					}
 				} catch (IOException e) {
-					System.out.println("IOException occured when sending EDR event.");
+					e.printStackTrace();
 				}
 			}
 		});
