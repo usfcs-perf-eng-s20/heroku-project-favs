@@ -234,4 +234,9 @@ public class HistFavCheckoutController {
 	public ResponseEntity<?> updateConfig(@RequestBody ConfigRequest request) {
 		return handler.updateConfig(request);
 	}
+	
+	@GetMapping(value = "/loaderio-3836daa08d7ab40d58e2161f7cebaf00")
+	public String verifyLoaderIo() {
+		return "loaderio-3836daa08d7ab40d58e2161f7cebaf00";
+	}
 }
