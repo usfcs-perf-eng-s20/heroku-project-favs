@@ -239,4 +239,9 @@ public class HistFavCheckoutController {
 	public String verifyLoaderIo() {
 		return "loaderio-3836daa08d7ab40d58e2161f7cebaf00";
 	}
+	
+	@GetMapping(value = "/loaderio-09688c2d06ad5cabf0c4bb7cf79bf085")
+	public String verifyLoaderIo_Sp() {
+		return "loaderio-09688c2d06ad5cabf0c4bb7cf79bf085";
+	}
 }
