@@ -96,7 +96,7 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> getTopRated(@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return ResponseEntity.status(HttpStatus.OK).body(handler.getTopRated(page, nums));
+		return handler.getTopRated(page, nums);
 	}
 	
 	@ApiOperation(value = "Favorite a Movie")
