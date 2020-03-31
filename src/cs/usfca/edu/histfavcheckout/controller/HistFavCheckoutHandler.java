@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -172,18 +173,25 @@ public class HistFavCheckoutHandler {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					new OperationalResponse(false, "selected should be one of favs, checkouts or ratings"));
 		}
-		LinkedHashMap<Integer, TopUser> topUserMap = new LinkedHashMap<Integer, TopUser>();
 		List<TopUserResponse> response = new LinkedList<TopUserResponse>();
 		if(!users.isEmpty()) {
+			LinkedHashMap<Integer, TopUser> topUserMap = new LinkedHashMap<Integer, TopUser>();
 			for(TopUser topUser : users) {
 				topUserMap.put(topUser.getUserId(), topUser);
 			}
 			List<UserInfoResponse.UserInfo> userInfos = APIClient.getTopUsers(topUserMap.keySet());
+			Map<Integer, UserInfoResponse.UserInfo> userInfoMap  = new HashMap<Integer, UserInfoResponse.UserInfo>();
 			for(UserInfoResponse.UserInfo userInfo : userInfos) {
-				response.add(new TopUserResponse(userInfo.getUserName(), 
-						userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(), 
-						topUserMap.get(userInfo.getUserId()).getCheckoutsCount(),
-						topUserMap.get(userInfo.getUserId()).getRatingsCount()));
+				userInfoMap.put(userInfo.getUserId(), userInfo);
+			}
+			for(TopUser topUser : users) {
+				UserInfoResponse.UserInfo userInfo = userInfoMap.get(topUser.getUserId());
+				if(userInfo != null) {
+					response.add(new TopUserResponse(userInfo.getUserName(), 
+							userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(), 
+							topUserMap.get(userInfo.getUserId()).getCheckoutsCount(),
+							topUserMap.get(userInfo.getUserId()).getRatingsCount()));
+				}
 			}
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
