@@ -64,13 +64,16 @@ public class APIClient {
 	
 	public static String generateRequestList(Set<Integer> ids) {
 		StringBuilder result = new StringBuilder();
-		List<Integer> list = new ArrayList<>();
-		list.addAll(ids);
-		for(int i=0; i<list.size() - 1; i++) {
+		if(!ids.isEmpty()) {
+			List<Integer> list = new ArrayList<>();
+			list.addAll(ids);
+			int i = 0;
+			for(; i<list.size() - 1; i++) {
+				result.append(list.get(i));
+				result.append(",");
+			}
 			result.append(list.get(i));
-			result.append(",");
 		}
-		result.append(list.get(list.size() - 1));
 		return result.toString();
 	}
 	
