@@ -47,6 +47,7 @@ import cs.usfca.edu.histfavcheckout.model.User;
 import cs.usfca.edu.histfavcheckout.model.UserInfoResponse;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
 import cs.usfca.edu.histfavcheckout.model.Favorites;
+import cs.usfca.edu.histfavcheckout.model.Favourites;
 import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
 
 
@@ -105,7 +106,28 @@ public class HistFavCheckoutHandler {
 	
 	public ResponseEntity<?> getTopFavs(int page, int nums) {
 		List<Product> products = productRepository.findTopN(PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
-		return ResponseEntity.status(HttpStatus.OK).body(products);		
+		if(products == null || products.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OperationalResponse(false, "No movie records are available!"));
+		}
+		LinkedHashMap<Integer, Favourites> favsMap = new LinkedHashMap<Integer, Favourites>();
+		for(Product product : products) {
+			Favourites favourite = new Favourites();
+			favourite.setMovieId(product.getId());
+			favourite.setFavourites(product.getNumberOfFavorites());
+			favsMap.put(product.getId(), favourite);
+		}
+		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(favsMap.keySet());
+		if(searchAPIResp == null) {
+			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + favsMap.keySet());
+		}
+		List<Favourites> res =  new LinkedList<Favourites>();
+		List<MovieData> moviesData = searchAPIResp.getResults();
+		for(MovieData movie : moviesData) {
+			Favourites fav = favsMap.get(movie.getID());
+			fav.setMovieName(movie.getTitle());
+			res.add(fav);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(res);	
 	}
 	
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
@@ -120,7 +142,6 @@ public class HistFavCheckoutHandler {
 		for(User u: userCheckedOutMovies) {
 			movieMap.put(u.getId().getProductId(), u);
 		}
-		//System.out.println("Calling search APIs");
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
 		if(searchAPIResp == null) {
 			confirm.setMessage("Search returned no information for ids: " + movieMap.keySet());
@@ -137,8 +158,8 @@ public class HistFavCheckoutHandler {
 	
 	public ResponseEntity<?> getTopRated(int page, int nums) {
 		List<RatingModel> ratings = productRepository.findTopNRating(PageRequest.of(page, nums));
-		if(ratings.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No movie records are available!");
+		if(ratings == null || ratings.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OperationalResponse(false, "No movie records are available!"));
 		}
 		LinkedHashMap<Integer, RatingModel> ratingMap = new LinkedHashMap<Integer, RatingModel>();
 		for(RatingModel ratingModel : ratings) {
