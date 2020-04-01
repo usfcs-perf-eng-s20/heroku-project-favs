@@ -2,20 +2,16 @@ package cs.usfca.edu.histfavcheckout.controller;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.ArrayList;
 import java.util.Optional;
 
-
-import io.micrometer.core.instrument.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,66 +19,67 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-
 import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.ConfigRequest;
+import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
+import cs.usfca.edu.histfavcheckout.model.Favorites;
+import cs.usfca.edu.histfavcheckout.model.Favourites;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
-import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
 import cs.usfca.edu.histfavcheckout.model.InventoryRepository;
 import cs.usfca.edu.histfavcheckout.model.OperationalRequest;
+import cs.usfca.edu.histfavcheckout.model.OperationalResponse;
 import cs.usfca.edu.histfavcheckout.model.PrimaryKey;
 import cs.usfca.edu.histfavcheckout.model.Product;
 import cs.usfca.edu.histfavcheckout.model.ProductRepository;
+import cs.usfca.edu.histfavcheckout.model.RatingModel;
+import cs.usfca.edu.histfavcheckout.model.RatingRequest;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
-import cs.usfca.edu.histfavcheckout.utils.Config;
 import cs.usfca.edu.histfavcheckout.model.TopRatedResponse;
 import cs.usfca.edu.histfavcheckout.model.TopUser;
 import cs.usfca.edu.histfavcheckout.model.TopUserResponse;
-import cs.usfca.edu.histfavcheckout.model.RatingRequest;
-import cs.usfca.edu.histfavcheckout.model.RatingModel;
 import cs.usfca.edu.histfavcheckout.model.User;
 import cs.usfca.edu.histfavcheckout.model.UserInfoResponse;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
-import cs.usfca.edu.histfavcheckout.model.Favorites;
-import cs.usfca.edu.histfavcheckout.model.Favourites;
-import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
+import cs.usfca.edu.histfavcheckout.utils.Config;
 
 
 @Component
 public class HistFavCheckoutHandler {
-	
+
 	public static int NUMBER_OF_DAYS_TO_BORROW = 15;
 	public static int DEFAULT_NUM_OF_MOVIES = 10000;
-	
+
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
 	private ProductRepository productRepository;
 	@Autowired
 	private InventoryRepository inventoryRepository;
-	
+
 	public User addUser(PrimaryKey id) {
 		return userRepository.save(new User(id));
 	}
-	
+
 	public List<User> getUser(int userId) {
 		return userRepository.findUserWithUserId(userId, Sort.by("id.productId"));
 	}
-	
+
 	public ResponseEntity<?> addInventory(Inventory inventory) {
 		Optional<Product> product = productRepository.findById(inventory.getProductId());
 		if(!product.isPresent()) {
+			System.out.println("Invalid movie Id: " + inventory.getProductId());
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Request unsuccessful. Invalid movie Id.");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(inventoryRepository.save(inventory));
 	}
-	
+
 	public ResponseEntity<?> getInventory(int movieId) {
 		Optional<Inventory> inv = inventoryRepository.findById(movieId);
 		if(!inv.isPresent()) {
+			System.out.println("Record does not exist at movieId: " + movieId);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Record does not exist!");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(inv.get());
@@ -91,19 +88,21 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> addMovie(Product movie) {
 		Optional<Product> product = productRepository.findById(movie.getId());
 		if(product.isPresent()) {
+			System.out.println(String.format("MovieId: %d was added previously", movie.getId()));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie has been added previously.");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(productRepository.save(movie));
 	}
-	
+
 	public ResponseEntity<?> getMovie(int movieId) {
 		Optional<Product> product = productRepository.findById(movieId);
 		if(!product.isPresent()) {
+			System.out.println(String.format("MovieId: %d does not exist", movieId));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie does not exist!");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(product.get());
 	}
-	
+
 	public ResponseEntity<?> getTopFavs(int page, int nums) {
 		List<Product> products = productRepository.findTopN(PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
 		if(products == null || products.isEmpty()) {
@@ -127,15 +126,16 @@ public class HistFavCheckoutHandler {
 			fav.setMovieName(movie.getTitle());
 			res.add(fav);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(res);	
+		return ResponseEntity.status(HttpStatus.OK).body(res);
 	}
-	
+
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
-		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
+		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true,
 				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
 		OperationalResponse confirm = new OperationalResponse();
 		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
 		if(userCheckedOutMovies.size() == 0) {
+			System.out.println("Returning! No valid data for user");
 			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 		}
 		LinkedHashMap<Integer, User> movieMap = new LinkedHashMap();
@@ -144,7 +144,7 @@ public class HistFavCheckoutHandler {
 		}
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
 		if(searchAPIResp == null) {
-			confirm.setMessage("Search returned no information for ids: " + movieMap.keySet());
+			System.out.println("Returning! Search API had no data for user checkedout movies");
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body(confirm);
 		}
 		for(MovieData m : searchAPIResp.getResults()) {
@@ -153,12 +153,13 @@ public class HistFavCheckoutHandler {
 			Movie mov = checkouts.newMovie(m.getTitle(), m.getID(), checkoutDate);
 			checkouts.addMovie(mov);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(checkouts);		
+		return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 	}
-	
+
 	public ResponseEntity<?> getTopRated(int page, int nums) {
 		List<RatingModel> ratings = productRepository.findTopNRating(PageRequest.of(page, nums));
 		if(ratings == null || ratings.isEmpty()) {
+      System.out.println("No movie records are available!");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OperationalResponse(false, "No movie records are available!"));
 		}
 		LinkedHashMap<Integer, RatingModel> ratingMap = new LinkedHashMap<Integer, RatingModel>();
@@ -167,6 +168,7 @@ public class HistFavCheckoutHandler {
 		}
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(ratingMap.keySet());
 		if(searchAPIResp == null) {
+			System.out.println("Search returned no information for ids: " + ratingMap.keySet());
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + ratingMap.keySet());
 		}
 		List<TopRatedResponse> res =  new LinkedList<TopRatedResponse>();
@@ -177,7 +179,7 @@ public class HistFavCheckoutHandler {
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(res);
 	}
-	
+
 	public ResponseEntity<?> getTopUsers(String selected, int page, int nums) {
 		List<TopUser> users = new ArrayList<>();
 		if(selected.equals("checkouts")) {
@@ -186,7 +188,7 @@ public class HistFavCheckoutHandler {
 		else if(selected.equals("favs")) {
 			users = userRepository.getTopUserFavourites(PageRequest.of(page, nums));
 		}
-		else if(selected.equals("ratings")){
+		else if(selected.equals("ratings")) {
 			users = userRepository.getTopRaters(PageRequest.of(page, nums));
 		}
 		else {
@@ -201,18 +203,18 @@ public class HistFavCheckoutHandler {
 			}
 			List<UserInfoResponse.UserInfo> userInfos = APIClient.getTopUsers(topUserMap.keySet());
 			for(UserInfoResponse.UserInfo userInfo : userInfos) {
-				response.add(new TopUserResponse(userInfo.getUserName(), 
-						userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(), 
+				response.add(new TopUserResponse(userInfo.getUserName(),
+						userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(),
 						topUserMap.get(userInfo.getUserId()).getCheckoutsCount(),
 						topUserMap.get(userInfo.getUserId()).getRatingsCount()));
 			}
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
-	
+
 	public OperationalResponse rate(RatingRequest request) {
 		if(request.getRating() > 5 || request.getRating() < 0) {
-			// log here: invalid rating.
+			System.out.println("Invalid rating! Rating must be between 0 and 5");
 			return new OperationalResponse(false, "Invalid rating! rating must be between 0 and 5");
 		}
 		User user;
@@ -220,7 +222,7 @@ public class HistFavCheckoutHandler {
 		PrimaryKey key = new PrimaryKey(request.getUserId(), request.getMovieId());
 		if(productRepository.existsById(request.getMovieId())) {
 			product = productRepository.getOne(request.getMovieId());
-		} 
+		}
 		else {
 			product = new Product(request.getMovieId());
 		}
@@ -242,14 +244,14 @@ public class HistFavCheckoutHandler {
 		productRepository.save(product);
 		return new OperationalResponse(true);
 	}
-	
+
 	public OperationalResponse favoriteMovie(OperationalRequest request) {
 		User user;
 		Product product;
 		PrimaryKey key = new PrimaryKey(request.getUserId(), request.getMovieId());
 		if(productRepository.existsById(request.getMovieId())) {
 			product = productRepository.getOne(request.getMovieId());
-		} 
+		}
 		else {
 			product = new Product(request.getMovieId());
 		}
@@ -268,7 +270,7 @@ public class HistFavCheckoutHandler {
 		productRepository.save(product);
 		return new OperationalResponse(true);
 	}
-	
+
 	public ResponseEntity<?> checkout(OperationalRequest request) {
 		int movieId = request.getMovieId();
 		int userId = request.getUserId();
@@ -315,6 +317,7 @@ public class HistFavCheckoutHandler {
 	public ResponseEntity<?> totalFavesAndCheckouts(int userId, int page, int nums) {
 		OperationalResponse confirm = new OperationalResponse();
 		if(userRepository.findUserWithUserId(userId, Sort.by("id.productId")).size() == 0) {
+		    System.out.println("User with userId: " + userId + " doesn't exist");
 			confirm.setMessage( "User does not exist");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 		}
@@ -323,6 +326,7 @@ public class HistFavCheckoutHandler {
 		List<Favorites> favorites = userFavorites.size() > 0 ? curateFavorites(userFavorites) : new ArrayList<Favorites>();
 
 		if(favorites == null) {
+			System.out.println("Could not retrieve movie title for userId:" + userId);
 			confirm.setMessage("Could not retrieve movie title");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 		}
@@ -355,7 +359,7 @@ public class HistFavCheckoutHandler {
 		return favorites;
 	}
 
-	
+
 	public ResponseEntity<?> returnMovie(int userId, int movieId) {
 		Optional<User> user = userRepository.findById(new PrimaryKey(userId, movieId));
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
@@ -370,17 +374,21 @@ public class HistFavCheckoutHandler {
 					confirm.setMessage("Movie returned successfully");
 					return ResponseEntity.status(HttpStatus.OK).body(confirm);
 				}
+				System.out.println("Could not update inventory table");
 				confirm.setMessage("Could not update inventory table");
 			} else {
 				if(!u.isCheckouts()) {
+					System.out.println(String.format("user has not checked out the concerned movie : %d", movieId));
 					confirm.setMessage(String.format("user has not checked out the concerned movie : %d", movieId));
 				}
 				else {
+					System.out.println("Could not update user table");
 					confirm.setMessage("Could not update user table");
 				}
 			}
 		}
 		else {
+			System.out.println("Either user or movie is not present/invalid");
 			confirm.setMessage("Either user or movie is not present/invalid");
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
@@ -392,10 +400,10 @@ public class HistFavCheckoutHandler {
 		Config.config.setUseAnalyticsAPIs(request.getAnalytics());
 		return ResponseEntity.status(HttpStatus.OK).body(new OperationalResponse(true, "Config updated successfully"));
 	}
-	
+
 	/**
 	 * gives the expected return date
-	 * expected return date = current date + default number of days to borrow movie  
+	 * expected return date = current date + default number of days to borrow movie
 	 * @return
 	 */
 	private Date getExpectedReturnDate() {
@@ -405,7 +413,7 @@ public class HistFavCheckoutHandler {
         c.add(Calendar.DATE, NUMBER_OF_DAYS_TO_BORROW);
         return c.getTime();
 	}
-	
+
 	private static String getCheckoutDate(Date expectedReturnDate) {
 		String pattern = "MM/dd/yyyy";
         DateFormat df = new SimpleDateFormat(pattern);
@@ -415,7 +423,7 @@ public class HistFavCheckoutHandler {
         String reportDate = df.format(c.getTime());
         return reportDate;
 	}
-  
+
 	/**
 	 * gives the current date
 	 * @return
