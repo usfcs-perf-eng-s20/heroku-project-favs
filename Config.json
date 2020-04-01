@@ -1,8 +1,8 @@
 {
-	"searchMoviesURL" : "https://perfeng-go-search.herokuapp.com/getMoviesByIds?ids=",
-	"authURL": "https://virtserver.swaggerhub.com/perfeng-loginteam/LoginService/1.0.0/isLoggedin?userId=",
-	"userInfoURL": "https://gentle-spire-73113.herokuapp.com//getUserInfo?userId=",
-	"analyticsURL": "https://prod-analytics-boot.herokuapp.com/saveEdr",
+	"searchMoviesURL": "https://perfeng-go-search.herokuapp.com/getMoviesByIds?ids=",
+	"authURL": "https://perfeng-login-user.herokuapp.com/isLoggedin?userId=",
+	"userInfoURL": "https://perfeng-login-user.herokuapp.com/getUserInfo?userId=",
+	"analyticsURL": "http://analytics-boot.herokuapp.com/saveEdr",
 	"useFavesAPIs":true,
 	"useSearchAPIs": true,
 	"useLoginAPIs": true,
