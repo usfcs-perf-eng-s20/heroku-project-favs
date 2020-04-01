@@ -1,7 +1,7 @@
 package cs.usfca.edu.histfavcheckout.model;
 
 public class Favourites {
-	private int movieId;
+    private int movieId;
     private String movieName;
     private int favourites;
 

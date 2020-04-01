@@ -23,6 +23,7 @@ import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.ConfigRequest;
 import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
 import cs.usfca.edu.histfavcheckout.model.Favorites;
+import cs.usfca.edu.histfavcheckout.model.Favourites;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse;
 import cs.usfca.edu.histfavcheckout.model.GetUserCheckoutsResponse.Movie;
 import cs.usfca.edu.histfavcheckout.model.Inventory;
@@ -43,9 +44,6 @@ import cs.usfca.edu.histfavcheckout.model.User;
 import cs.usfca.edu.histfavcheckout.model.UserInfoResponse;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
 import cs.usfca.edu.histfavcheckout.utils.Config;
-import cs.usfca.edu.histfavcheckout.model.Favorites;
-import cs.usfca.edu.histfavcheckout.model.Favourites;
-import cs.usfca.edu.histfavcheckout.model.FavesAndCheckOuts;
 
 
 @Component
@@ -53,7 +51,7 @@ public class HistFavCheckoutHandler {
 
 	public static int NUMBER_OF_DAYS_TO_BORROW = 15;
 	public static int DEFAULT_NUM_OF_MOVIES = 10000;
-  
+
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
@@ -132,7 +130,7 @@ public class HistFavCheckoutHandler {
 	}
 
 	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
-		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true, 
+		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true,
 				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
 		OperationalResponse confirm = new OperationalResponse();
 		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
@@ -190,15 +188,12 @@ public class HistFavCheckoutHandler {
 		else if(selected.equals("favs")) {
 			users = userRepository.getTopUserFavourites(PageRequest.of(page, nums));
 		}
-		else if(selected.equals("ratings")){
+		else if(selected.equals("ratings")) {
 			users = userRepository.getTopRaters(PageRequest.of(page, nums));
 		}
-    else {
+		else {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					new OperationalResponse(false, "selected should be one of favs, checkouts or ratings"));
-		if(users.isEmpty()) {
-			System.out.println("No users are available");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No users are available");
 		}
 		LinkedHashMap<Integer, TopUser> topUserMap = new LinkedHashMap<Integer, TopUser>();
 		List<TopUserResponse> response = new LinkedList<TopUserResponse>();
@@ -208,8 +203,8 @@ public class HistFavCheckoutHandler {
 			}
 			List<UserInfoResponse.UserInfo> userInfos = APIClient.getTopUsers(topUserMap.keySet());
 			for(UserInfoResponse.UserInfo userInfo : userInfos) {
-				response.add(new TopUserResponse(userInfo.getUserName(), 
-						userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(), 
+				response.add(new TopUserResponse(userInfo.getUserName(),
+						userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(),
 						topUserMap.get(userInfo.getUserId()).getCheckoutsCount(),
 						topUserMap.get(userInfo.getUserId()).getRatingsCount()));
 			}
@@ -275,7 +270,7 @@ public class HistFavCheckoutHandler {
 		productRepository.save(product);
 		return new OperationalResponse(true);
 	}
-	
+
 	public ResponseEntity<?> checkout(OperationalRequest request) {
 		int movieId = request.getMovieId();
 		int userId = request.getUserId();
