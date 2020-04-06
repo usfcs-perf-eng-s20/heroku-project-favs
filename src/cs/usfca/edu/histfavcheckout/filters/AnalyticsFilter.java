@@ -17,6 +17,7 @@ import org.springframework.core.annotation.Order;
 
 import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.EDRRequest;
+import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
 
 @Order(1)
 public class AnalyticsFilter implements Filter {
@@ -40,9 +41,10 @@ public class AnalyticsFilter implements Filter {
 				try {
 					boolean success = APIClient.sendEDR(edrRequest);
 					if(!success) {
-						System.out.println("EDR Event responded with responseCode: " + res.getStatus());
+						LoggerHelper.makeInfoLog("POST /saveEDR --> " + "EDR Event responded with responseCode: " + res.getStatus());
 					}
 				} catch (IOException e) {
+					LoggerHelper.makeSevereLog("POST /saveEDR --> error! Message: " + e.getMessage());
 					e.printStackTrace();
 				}
 			}
