@@ -44,6 +44,7 @@ import cs.usfca.edu.histfavcheckout.model.User;
 import cs.usfca.edu.histfavcheckout.model.UserInfoResponse;
 import cs.usfca.edu.histfavcheckout.model.UserRepository;
 import cs.usfca.edu.histfavcheckout.utils.Config;
+import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
 
 
 @Component
@@ -67,43 +68,43 @@ public class HistFavCheckoutHandler {
 		return userRepository.findUserWithUserId(userId, Sort.by("id.productId"));
 	}
 
-	public ResponseEntity<?> addInventory(Inventory inventory) {
+	public ResponseEntity<?> addInventory(Inventory inventory, String prefix) {
 		Optional<Product> product = productRepository.findById(inventory.getProductId());
 		if(!product.isPresent()) {
-			System.out.println("Invalid movie Id: " + inventory.getProductId());
+			LoggerHelper.makeInfoLog(prefix + "Invalid movie Id: " + inventory.getProductId());
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Request unsuccessful. Invalid movie Id.");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(inventoryRepository.save(inventory));
 	}
 
-	public ResponseEntity<?> getInventory(int movieId) {
+	public ResponseEntity<?> getInventory(int movieId, String prefix) {
 		Optional<Inventory> inv = inventoryRepository.findById(movieId);
 		if(!inv.isPresent()) {
-			System.out.println("Record does not exist at movieId: " + movieId);
+			LoggerHelper.makeInfoLog(prefix + "Record does not exist at movieId: " + movieId);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Record does not exist!");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(inv.get());
 	}
 
-	public ResponseEntity<?> addMovie(Product movie) {
+	public ResponseEntity<?> addMovie(Product movie, String prefix) {
 		Optional<Product> product = productRepository.findById(movie.getId());
 		if(product.isPresent()) {
-			System.out.println(String.format("MovieId: %d was added previously", movie.getId()));
+			LoggerHelper.makeInfoLog(prefix + String.format("MovieId: %d was added previously", movie.getId()));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie has been added previously.");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(productRepository.save(movie));
 	}
 
-	public ResponseEntity<?> getMovie(int movieId) {
+	public ResponseEntity<?> getMovie(int movieId, String prefix) {
 		Optional<Product> product = productRepository.findById(movieId);
 		if(!product.isPresent()) {
-			System.out.println(String.format("MovieId: %d does not exist", movieId));
+			LoggerHelper.makeInfoLog(prefix + String.format("MovieId: %d does not exist", movieId));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Movie does not exist!");
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(product.get());
 	}
 
-	public ResponseEntity<?> getTopFavs(int page, int nums) {
+	public ResponseEntity<?> getTopFavs(int page, int nums, String prefix) {
 		List<Product> products = productRepository.findTopN(PageRequest.of(page, nums, Sort.by("numberOfFavorites").descending()));
 		if(products == null || products.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OperationalResponse(false, "No movie records are available!"));
@@ -117,6 +118,7 @@ public class HistFavCheckoutHandler {
 		}
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(favsMap.keySet());
 		if(searchAPIResp == null) {
+			LoggerHelper.makeWarningLog(prefix + "Search returned no information for ids: " + favsMap.keySet());
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + favsMap.keySet());
 		}
 		List<Favourites> res =  new LinkedList<Favourites>();
@@ -129,13 +131,13 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(res);
 	}
 
-	public ResponseEntity<?> getCheckouts(int userId, int page, int nums) {
+	public ResponseEntity<?> getCheckouts(int userId, int page, int nums, String prefix) {
 		List<User> userCheckedOutMovies = userRepository.findCheckedOutMovies(userId, true,
 				PageRequest.of(page, nums, Sort.by("expectedReturnDate").descending()));
 		OperationalResponse confirm = new OperationalResponse();
 		GetUserCheckoutsResponse checkouts = new GetUserCheckoutsResponse();
 		if(userCheckedOutMovies.size() == 0) {
-			System.out.println("Returning! No valid data for user");
+			LoggerHelper.makeInfoLog(prefix + "Returning! No valid data for user");
 			return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 		}
 		LinkedHashMap<Integer, User> movieMap = new LinkedHashMap();
@@ -144,7 +146,7 @@ public class HistFavCheckoutHandler {
 		}
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
 		if(searchAPIResp == null) {
-			System.out.println("Returning! Search API had no data for user checkedout movies");
+			LoggerHelper.makeWarningLog(prefix + "Returning! Search API had no data for user checkedout movies");
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body(confirm);
 		}
 		for(MovieData m : searchAPIResp.getResults()) {
@@ -156,10 +158,10 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(checkouts);
 	}
 
-	public ResponseEntity<?> getTopRated(int page, int nums) {
+	public ResponseEntity<?> getTopRated(int page, int nums, String prefix) {
 		List<RatingModel> ratings = productRepository.findTopNRating(PageRequest.of(page, nums));
 		if(ratings == null || ratings.isEmpty()) {
-      System.out.println("No movie records are available!");
+			LoggerHelper.makeInfoLog(prefix + "No movie records are available!");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OperationalResponse(false, "No movie records are available!"));
 		}
 		LinkedHashMap<Integer, RatingModel> ratingMap = new LinkedHashMap<Integer, RatingModel>();
@@ -168,7 +170,7 @@ public class HistFavCheckoutHandler {
 		}
 		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(ratingMap.keySet());
 		if(searchAPIResp == null) {
-			System.out.println("Search returned no information for ids: " + ratingMap.keySet());
+			LoggerHelper.makeWarningLog(prefix + "Search returned no information for ids: " + ratingMap.keySet());
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + ratingMap.keySet());
 		}
 		List<TopRatedResponse> res =  new LinkedList<TopRatedResponse>();
@@ -180,7 +182,7 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(res);
 	}
 
-	public ResponseEntity<?> getTopUsers(String selected, int page, int nums) {
+	public ResponseEntity<?> getTopUsers(String selected, int page, int nums, String prefix) {
 		List<TopUser> users = new ArrayList<>();
 		if(selected.equals("checkouts")) {
 			users = userRepository.getTopUserCheckouts(PageRequest.of(page, nums));
@@ -192,6 +194,7 @@ public class HistFavCheckoutHandler {
 			users = userRepository.getTopRaters(PageRequest.of(page, nums));
 		}
 		else {
+			LoggerHelper.makeWarningLog(prefix + "selected should be one of favs, checkouts or ratings");
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					new OperationalResponse(false, "selected should be one of favs, checkouts or ratings"));
 		}
@@ -212,9 +215,9 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
-	public OperationalResponse rate(RatingRequest request) {
+	public OperationalResponse rate(RatingRequest request, String prefix) {
 		if(request.getRating() > 5 || request.getRating() < 0) {
-			System.out.println("Invalid rating! Rating must be between 0 and 5");
+			LoggerHelper.makeInfoLog(prefix + "Invalid rating! Rating must be between 0 and 5");
 			return new OperationalResponse(false, "Invalid rating! rating must be between 0 and 5");
 		}
 		User user;
@@ -271,7 +274,7 @@ public class HistFavCheckoutHandler {
 		return new OperationalResponse(true);
 	}
 
-	public ResponseEntity<?> checkout(OperationalRequest request) {
+	public ResponseEntity<?> checkout(OperationalRequest request, String prefix) {
 		int movieId = request.getMovieId();
 		int userId = request.getUserId();
 		PrimaryKey pk = new PrimaryKey(userId, movieId);
@@ -284,12 +287,13 @@ public class HistFavCheckoutHandler {
 			s.add(movieId);
 			SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(s);
 			if(searchAPIResp == null) {
-				resp.setMessage("Search API has no record for Movie with Id " + movieId);
+				LoggerHelper.makeInfoLog(prefix + "Search API has no record for Movie with Id " + movieId);
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resp);
 			}
 		}
 		Inventory inv = (record.isPresent()) ? record.get() : new Inventory(movieId, DEFAULT_NUM_OF_MOVIES, DEFAULT_NUM_OF_MOVIES);
 		if(inv.getAvailableCopies() < 1) {
+			LoggerHelper.makeInfoLog(prefix + "All copies of movie with Id " + movieId + " have been rented to others");
 			resp.setMessage("All copies of movie with Id " + movieId + " have been rented to others");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resp);
 		}
@@ -301,6 +305,7 @@ public class HistFavCheckoutHandler {
 				u.setExpectedReturnDate(getExpectedReturnDate());
 			}
 			else {
+				LoggerHelper.makeInfoLog(prefix + "user " + userId + " must return this movie before they can check it out again.");
 				resp.setMessage("user " + userId + " must return this movie before they can check it out again.");
 				return ResponseEntity.status(HttpStatus.OK).body(resp);
 			}
@@ -314,10 +319,10 @@ public class HistFavCheckoutHandler {
 		return ResponseEntity.status(HttpStatus.OK).body(new OperationalResponse(true, "Movie Checked Out Successfully"));
 	}
 
-	public ResponseEntity<?> totalFavesAndCheckouts(int userId, int page, int nums) {
+	public ResponseEntity<?> totalFavesAndCheckouts(int userId, int page, int nums, String prefix) {
 		OperationalResponse confirm = new OperationalResponse();
 		if(userRepository.findUserWithUserId(userId, Sort.by("id.productId")).size() == 0) {
-		    System.out.println("User with userId: " + userId + " doesn't exist");
+			LoggerHelper.makeInfoLog(prefix + "User with userId: " + userId + " doesn't exist");
 			confirm.setMessage( "User does not exist");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 		}
@@ -326,7 +331,7 @@ public class HistFavCheckoutHandler {
 		List<Favorites> favorites = userFavorites.size() > 0 ? curateFavorites(userFavorites) : new ArrayList<Favorites>();
 
 		if(favorites == null) {
-			System.out.println("Could not retrieve movie title for userId:" + userId);
+			LoggerHelper.makeInfoLog(prefix + "Could not retrieve movie title for userId:" + userId);
 			confirm.setMessage("Could not retrieve movie title");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 		}
@@ -360,7 +365,7 @@ public class HistFavCheckoutHandler {
 	}
 
 
-	public ResponseEntity<?> returnMovie(int userId, int movieId) {
+	public ResponseEntity<?> returnMovie(int userId, int movieId, String prefix) {
 		Optional<User> user = userRepository.findById(new PrimaryKey(userId, movieId));
 		Optional<Inventory> inventory = inventoryRepository.findById(movieId);
 		OperationalResponse confirm = new OperationalResponse();
@@ -374,27 +379,29 @@ public class HistFavCheckoutHandler {
 					confirm.setMessage("Movie returned successfully");
 					return ResponseEntity.status(HttpStatus.OK).body(confirm);
 				}
-				System.out.println("Could not update inventory table");
+				LoggerHelper.makeInfoLog(prefix + "Could not update inventory table");
 				confirm.setMessage("Could not update inventory table");
 			} else {
 				if(!u.isCheckouts()) {
-					System.out.println(String.format("user has not checked out the concerned movie : %d", movieId));
+					LoggerHelper.makeInfoLog(prefix + String.format("user has not checked out the concerned movie : %d", movieId));
 					confirm.setMessage(String.format("user has not checked out the concerned movie : %d", movieId));
 				}
 				else {
-					System.out.println("Could not update user table");
+					LoggerHelper.makeInfoLog(prefix + "Could not update user table");
 					confirm.setMessage("Could not update user table");
 				}
 			}
 		}
 		else {
-			System.out.println("Either user or movie is not present/invalid");
+			LoggerHelper.makeInfoLog(prefix + "Either user or movie is not present/invalid");
 			confirm.setMessage("Either user or movie is not present/invalid");
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(confirm);
 	}
 
-	public ResponseEntity<?> updateConfig(ConfigRequest request) {
+	public ResponseEntity<?> updateConfig(ConfigRequest request, String prefix) {
+		LoggerHelper.makeInfoLog(prefix + "Updating Config. login:" + request.getLogin() 
+		+ " search:" + request.getSearch() + " analytics:" + request.getAnalytics());
 		Config.config.setUseLoginAPIs(request.getLogin());
 		Config.config.setUseSearchAPIs(request.getSearch());
 		Config.config.setUseAnalyticsAPIs(request.getAnalytics());

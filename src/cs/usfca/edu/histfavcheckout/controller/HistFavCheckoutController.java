@@ -63,7 +63,7 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> getTopFavs(@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return handler.getTopFavs(page, nums);
+		return handler.getTopFavs(page, nums, "GET /getTopFavs --> ");
 	}
 	
 	@ApiOperation(value = "Rate a Movie")
@@ -77,11 +77,11 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> rateMovie(@ApiParam(value = "RatingRequest", required = true) 
 		@RequestBody RatingRequest request) {
-		OperationalResponse response = handler.rate(request);
+		OperationalResponse response = handler.rate(request, "POST /rateMovie --> ");
 		if(response.isConfirm()) {
-			return ResponseEntity.status(HttpStatus.OK).body(handler.rate(request));
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(handler.rate(request));
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	}
 
 	@ApiOperation(value = "Get Top Rated Movies", response = List.class)
@@ -96,7 +96,7 @@ public class HistFavCheckoutController {
 	@ResponseBody()
 	public ResponseEntity<?> getTopRated(@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return handler.getTopRated(page, nums);
+		return handler.getTopRated(page, nums, "GET /getTopRated --> ");
 	}
 	
 	@ApiOperation(value = "Favorite a Movie")
@@ -126,7 +126,7 @@ public class HistFavCheckoutController {
 	public ResponseEntity<?> getTopUsers(@ApiParam(value = "Checkouts, Faves and Ratings per user can be selected", required = true) @RequestParam String selected, 
 			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return handler.getTopUsers(selected, page, nums);
+		return handler.getTopUsers(selected, page, nums, "GET /getTopUsers --> ");
 	}
 	
 	@ApiOperation(value = "Returns all the favorite movies and the total number of movies checked out for the user", response = List.class)
@@ -143,7 +143,7 @@ public class HistFavCheckoutController {
 	public ResponseEntity<?> totalFavesAndCheckouts(@ApiParam(value = "id of user", required = true) @RequestParam int userId,
 					@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page,
 					@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return handler.totalFavesAndCheckouts(userId, page, nums);
+		return handler.totalFavesAndCheckouts(userId, page, nums, "GET /totalFavesAndCheckouts --> ");
 	}
 	
 	@ApiOperation(value = "Returns details of all movies a user has checked out", response = List.class)
@@ -160,7 +160,7 @@ public class HistFavCheckoutController {
 	public ResponseEntity<?> getCheckedOutMovies(@ApiParam(value = "id of user", required = true) @RequestParam int userId, 
 			@ApiParam(value = "index to start fetching movies", required = true) @RequestParam int page, 
 			@ApiParam(value = "number of movies per page to return", required = true) @RequestParam int nums) {
-		return handler.getCheckouts(userId, page, nums);
+		return handler.getCheckouts(userId, page, nums, "GET /checkedOutMovies --> ");
 	}
 	
 	@ApiOperation(value = "Lets a user return a movie", response = String.class)
@@ -175,7 +175,7 @@ public class HistFavCheckoutController {
 	@PutMapping(value = "/returnMovie")
 	@ResponseBody()
 	public ResponseEntity<?> returnMovies(@RequestBody OperationalRequest request) {
-		return handler.returnMovie(request.getUserId(), request.getMovieId());
+		return handler.returnMovie(request.getUserId(), request.getMovieId(), "PUT /returnMovie --> ");
 	}
 	
 	@ApiOperation(value = "Lets a user checkout a movie", response = String.class)
@@ -190,7 +190,7 @@ public class HistFavCheckoutController {
 	@PutMapping(value = "/checkOutMovie")
 	@ResponseBody()
 	public ResponseEntity<?> checkOutMovie(@RequestBody OperationalRequest request) {
-		return handler.checkout(request);
+		return handler.checkout(request, "PUT /checkOutMovie --> ");
 	}
 	
 	@GetMapping(value = "/user")
@@ -208,30 +208,30 @@ public class HistFavCheckoutController {
 	@GetMapping(value = "/inventory")
 	@ResponseBody()
 	public ResponseEntity<?> getInventory(@RequestParam int movieId) {
-		return handler.getInventory(movieId);
+		return handler.getInventory(movieId, "GET /inventory -->");
 	}
 	
 	@PostMapping(value = "/inventory")
 	@ResponseBody()
 	public ResponseEntity<?> postInventory(@RequestBody Inventory inventory) {
-		return handler.addInventory(inventory);
+		return handler.addInventory(inventory, "POST /inventory -->");
 	}
 	
 	@GetMapping(value = "/movie")
 	@ResponseBody()
 	public ResponseEntity<?> getMovie(@RequestParam int movieId) {
-		return handler.getMovie(movieId);
+		return handler.getMovie(movieId, "GET /movie --> ");
 	}
 	
 	@PostMapping(value = "/movie")
 	@ResponseBody()
 	public ResponseEntity<?> postMovie(@RequestBody Product movie) {
-		return handler.addMovie(movie);
+		return handler.addMovie(movie, "POST /movie --> ");
 	}
 	
 	@PutMapping(value = "/config")
 	@ResponseBody()
 	public ResponseEntity<?> updateConfig(@RequestBody ConfigRequest request) {
-		return handler.updateConfig(request);
+		return handler.updateConfig(request, "PUT /config --> ");
 	}
 }
