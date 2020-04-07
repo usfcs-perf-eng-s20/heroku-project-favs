@@ -1,6 +1,6 @@
 {
 	"searchMoviesURL": "https://perfeng-go-search.herokuapp.com/getMoviesByIds?ids=",
-	"authURL": "https://perfeng-login-user.herokuapp.com/isLoggedin?userId=",
+	"authURL": "https://perfeng-login-user.herokuapp.com/isLoggedIn?userId=",
 	"userInfoURL": "https://perfeng-login-user.herokuapp.com/getUserInfo?userId=",
 	"analyticsURL": "http://analytics-boot.herokuapp.com/saveEdr",
 	"useFavesAPIs":true,

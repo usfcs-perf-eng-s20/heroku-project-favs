@@ -18,17 +18,17 @@ import com.google.gson.Gson;
 
 import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.AuthRequest;
+import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
 import cs.usfca.edu.histfavcheckout.utils.MultiReadHttpServletRequest;
 
 @Order(0)
 public class AuthenticationFilter implements Filter {
-	
+
 	private static Gson gson = new Gson();
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
-		//TODO: LOG this: "==============> Auth Filter Executed <==============="
 		HttpServletResponse res = (HttpServletResponse) response;
 		MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest((HttpServletRequest) request);
 		String userParam = multiReadRequest.getParameter("userId");
@@ -51,8 +51,9 @@ public class AuthenticationFilter implements Filter {
 			chain.doFilter(multiReadRequest, response);
 		}
 		else {
+			LoggerHelper.makeWarningLog("GET /isLoggedIn --> " + userId + " is not authorized.");
 			res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 		}
 	}
-	
+
 }

@@ -13,17 +13,17 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
 import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.EDRRequest;
+import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
 
 @Order(1)
 public class AnalyticsFilter implements Filter {
 	private static final String SERVICE_NAME = "HIST-FAV-CHECKOUT";
 	private static final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-	
+
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
@@ -36,16 +36,16 @@ public class AnalyticsFilter implements Filter {
 			@Override
 			public void run() {
 				EDRRequest edrRequest = new EDRRequest(req.getMethod(), req.getPathInfo(),
-						System.currentTimeMillis() - timestamp, String.valueOf(res.getStatus()), SERVICE_NAME, 
+						System.currentTimeMillis() - timestamp, String.valueOf(res.getStatus()), SERVICE_NAME,
 						success, String.valueOf(timestamp), "");
 				try {
 					boolean success = APIClient.sendEDR(edrRequest);
-					if(success) {
-						//System.out.println("EDR Event responded with non 200 responseCode: " + responseCode + " response!");
-						// LOG here EDR responded non 200 status and log what status was returned. 
+					if(!success) {
+						LoggerHelper.makeInfoLog("POST /saveEDR --> " + "EDR Event responded with responseCode: " + res.getStatus());
 					}
 				} catch (IOException e) {
-					// LOG here that IOException occured when sending EDR Event.
+					LoggerHelper.makeSevereLog("POST /saveEDR --> error! Message: " + e.getMessage());
+					e.printStackTrace();
 				}
 			}
 		});

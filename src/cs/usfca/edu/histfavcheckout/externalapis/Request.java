@@ -9,6 +9,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
+
 public class Request {
 	
 	public URL url(String url) {
@@ -16,7 +18,7 @@ public class Request {
 			return new URL(url);
 		}
 		catch(MalformedURLException e) {
-			System.out.println("MALFORMED EXCEPTION : " + url);
+			LoggerHelper.makeSevereLog("MALFORMED EXCEPTION : " + url);
 			return null;
 		}
 	}
@@ -28,7 +30,7 @@ public class Request {
 			con.setRequestMethod(requestMethod);
 		} 
 		catch (IOException e) {
-//			e.printStackTrace();
+			e.printStackTrace();
 		}
 		return con;
 	}
@@ -44,7 +46,7 @@ public class Request {
 				con.setRequestProperty("Authorization", authorization);
 		} 
 		catch (IOException e) {
-//			e.printStackTrace();
+			e.printStackTrace();
 		}
 		return con;
 	}
@@ -64,7 +66,7 @@ public class Request {
 				return response.toString();
 			}
 		} catch (IOException e) {
-			System.out.println("COULD NOT CONNECT OR READ RESPONSE : " + con.getURL());
+			LoggerHelper.makeSevereLog("COULD NOT CONNECT OR READ RESPONSE : " + con.getURL());
 		}
 		
 		return null;
@@ -79,7 +81,7 @@ public class Request {
 			out.close();
 			return true;
 		} catch (IOException e) {
-			System.out.println("COULD NOT GET OUTPUTSTREAM OF CONNECTION : " + con.getURL());
+			LoggerHelper.makeSevereLog("COULD NOT GET OUTPUTSTREAM OF CONNECTION : " + con.getURL());
 			return false;
 		}
 		
