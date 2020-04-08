@@ -51,7 +51,7 @@ import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
 public class HistFavCheckoutHandler {
 
 	public static int NUMBER_OF_DAYS_TO_BORROW = 15;
-	public static int DEFAULT_NUM_OF_MOVIES = 10000;
+	public static int DEFAULT_NUM_OF_MOVIES = 100000;
 
 	@Autowired
 	private UserRepository userRepository;

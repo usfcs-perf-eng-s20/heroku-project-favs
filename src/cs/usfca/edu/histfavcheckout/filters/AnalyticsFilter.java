@@ -32,23 +32,39 @@ public class AnalyticsFilter implements Filter {
 		long timestamp = System.currentTimeMillis();
 		chain.doFilter(request, response);
 		boolean success = (res.getStatus() == HttpURLConnection.HTTP_OK);
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				EDRRequest edrRequest = new EDRRequest(req.getMethod(), req.getPathInfo(),
-						System.currentTimeMillis() - timestamp, String.valueOf(res.getStatus()), SERVICE_NAME,
-						success, String.valueOf(timestamp), "");
-				try {
-					boolean success = APIClient.sendEDR(edrRequest);
-					if(!success) {
-						LoggerHelper.makeInfoLog("POST /saveEDR --> " + "EDR Event responded with responseCode: " + res.getStatus());
-					}
-				} catch (IOException e) {
-					LoggerHelper.makeSevereLog("POST /saveEDR --> error! Message: " + e.getMessage());
-					e.printStackTrace();
-				}
+		sequentialEDR(req,res,timestamp,success);
+//		executor.execute(new Runnable() {
+//			@Override
+//			public void run() {
+//				EDRRequest edrRequest = new EDRRequest(req.getMethod(), req.getPathInfo(),
+//						System.currentTimeMillis() - timestamp, String.valueOf(res.getStatus()), SERVICE_NAME,
+//						success, String.valueOf(timestamp), "");
+//				try {
+//					boolean success = APIClient.sendEDR(edrRequest);
+//					if(!success) {
+//						LoggerHelper.makeInfoLog("POST /saveEDR --> " + "EDR Event responded with responseCode: " + res.getStatus());
+//					}
+//				} catch (IOException e) {
+//					LoggerHelper.makeSevereLog("POST /saveEDR --> error! Message: " + e.getMessage());
+//					e.printStackTrace();
+//				}
+//			}
+//		});
+	}
+
+	public void sequentialEDR(HttpServletRequest req, HttpServletResponse res, long timestamp, boolean success) {
+		EDRRequest edrRequest = new EDRRequest(req.getMethod(), req.getPathInfo(),
+				System.currentTimeMillis() - timestamp, String.valueOf(res.getStatus()), SERVICE_NAME,
+				success, String.valueOf(timestamp), "");
+		try {
+			success = APIClient.sendEDR(edrRequest);
+			if(!success) {
+				LoggerHelper.makeInfoLog("POST /saveEDR --> " + "EDR Event responded with responseCode: " + res.getStatus());
 			}
-		});
+		} catch (IOException e) {
+			LoggerHelper.makeSevereLog("POST /saveEDR --> error! Message: " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 }
