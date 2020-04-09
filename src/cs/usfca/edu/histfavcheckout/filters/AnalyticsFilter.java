@@ -50,7 +50,7 @@ public class AnalyticsFilter implements Filter {
 // 				}
 // 			}
 // 		});
-// 	}
+	}
 
 	public void sequentialEDR(HttpServletRequest req, HttpServletResponse res, long timestamp, boolean success) {
 		EDRRequest edrRequest = new EDRRequest(req.getMethod(), req.getPathInfo(),
