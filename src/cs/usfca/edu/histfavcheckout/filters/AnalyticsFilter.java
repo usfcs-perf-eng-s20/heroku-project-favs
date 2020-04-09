@@ -22,7 +22,7 @@ import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
 @Order(1)
 public class AnalyticsFilter implements Filter {
 	private static final String SERVICE_NAME = "HIST-FAV-CHECKOUT";
-	private static final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+	private static final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(100);
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
