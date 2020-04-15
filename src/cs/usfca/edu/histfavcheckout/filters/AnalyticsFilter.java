@@ -19,7 +19,7 @@ import cs.usfca.edu.histfavcheckout.externalapis.APIClient;
 import cs.usfca.edu.histfavcheckout.model.EDRRequest;
 import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
 
-@Order(1)
+@Order(2)
 public class AnalyticsFilter implements Filter {
 	private static final String SERVICE_NAME = "HIST-FAV-CHECKOUT";
 	private static final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
