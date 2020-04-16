@@ -45,7 +45,7 @@ public class SplunkLogFilter implements Filter {
 			
 		}
 		else {
-			LoggerHelper.makeInfoLog("serviceName=" + SPLUNK_SERVICE_NAME + ", method=" + req.getMethod() 
+			LoggerHelper.makeWarningLog("serviceName=" + SPLUNK_SERVICE_NAME + ", method=" + req.getMethod() 
 			+ ", path=" + req.getServletPath() + ", requestParams={" + req.getQueryString() + "}" + ", requestBody=" + requestBody 
 			+ ", runTime=" + processingTime + ", status=" + res.getStatus() + ", error=1" + ", message=" + responseMessage);
 		}
