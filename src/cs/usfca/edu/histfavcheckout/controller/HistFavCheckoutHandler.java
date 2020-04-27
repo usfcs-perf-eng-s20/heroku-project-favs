@@ -59,6 +59,8 @@ public class HistFavCheckoutHandler {
 	private ProductRepository productRepository;
 	@Autowired
 	private InventoryRepository inventoryRepository;
+	@Autowired
+	private APIClient apiClient;
 
 	public User addUser(PrimaryKey id) {
 		return userRepository.save(new User(id));
@@ -116,7 +118,7 @@ public class HistFavCheckoutHandler {
 			favourite.setFavourites(product.getNumberOfFavorites());
 			favsMap.put(product.getId(), favourite);
 		}
-		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(favsMap.keySet());
+		SearchMoviesResponse searchAPIResp = apiClient.getAllMovies(favsMap.keySet());
 		if(searchAPIResp == null) {
 			LoggerHelper.makeWarningLog(prefix + "Search returned no information for ids: " + favsMap.keySet());
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + favsMap.keySet());
@@ -144,7 +146,7 @@ public class HistFavCheckoutHandler {
 		for(User u: userCheckedOutMovies) {
 			movieMap.put(u.getId().getProductId(), u);
 		}
-		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(movieMap.keySet());
+		SearchMoviesResponse searchAPIResp = apiClient.getAllMovies(movieMap.keySet());
 		if(searchAPIResp == null) {
 			LoggerHelper.makeWarningLog(prefix + "Returning! Search API had no data for user checkedout movies");
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body(confirm);
@@ -168,7 +170,7 @@ public class HistFavCheckoutHandler {
 		for(RatingModel ratingModel : ratings) {
 			ratingMap.put(ratingModel.getId(), ratingModel);
 		}
-		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(ratingMap.keySet());
+		SearchMoviesResponse searchAPIResp = apiClient.getAllMovies(ratingMap.keySet());
 		if(searchAPIResp == null) {
 			LoggerHelper.makeWarningLog(prefix + "Search returned no information for ids: " + ratingMap.keySet());
 			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Search returned no information for ids: " + ratingMap.keySet());
@@ -204,7 +206,7 @@ public class HistFavCheckoutHandler {
 			for(TopUser topUser : users) {
 				topUserMap.put(topUser.getUserId(), topUser);
 			}
-			List<UserInfoResponse.UserInfo> userInfos = APIClient.getTopUsers(topUserMap.keySet());
+			List<UserInfoResponse.UserInfo> userInfos = apiClient.getTopUsers(topUserMap.keySet());
 			for(UserInfoResponse.UserInfo userInfo : userInfos) {
 				response.add(new TopUserResponse(userInfo.getUserName(),
 						userInfo.getEmail(), topUserMap.get(userInfo.getUserId()).getFavsCount(),
@@ -285,7 +287,7 @@ public class HistFavCheckoutHandler {
 		if(!record.isPresent()) {
 			HashSet<Integer> s = new HashSet<Integer>();
 			s.add(movieId);
-			SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(s);
+			SearchMoviesResponse searchAPIResp = apiClient.getAllMovies(s);
 			if(searchAPIResp == null) {
 				LoggerHelper.makeInfoLog(prefix + "Search API has no record for Movie with Id " + movieId);
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resp);
@@ -349,7 +351,7 @@ public class HistFavCheckoutHandler {
 			idToUser.put(u.getId().getProductId(), u);
 		}
 
-		SearchMoviesResponse searchAPIResp = APIClient.getAllMovies(idToUser.keySet());
+		SearchMoviesResponse searchAPIResp = apiClient.getAllMovies(idToUser.keySet());
 		if(searchAPIResp == null) {
 			return null;
 		}

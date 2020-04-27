@@ -25,6 +25,7 @@ import cs.usfca.edu.histfavcheckout.utils.MultiReadHttpServletRequest;
 public class AuthenticationFilter implements Filter {
 
 	private static Gson gson = new Gson();
+	private APIClient apiClient = new APIClient();
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -47,7 +48,7 @@ public class AuthenticationFilter implements Filter {
 			AuthRequest authRequest = gson.fromJson(responseBody.toString(), AuthRequest.class);
 			userId = authRequest.getUserId();
 		}
-		if(APIClient.isAuthenticated(userId)) {
+		if(apiClient.isAuthenticated(userId)) {
 			chain.doFilter(multiReadRequest, response);
 		}
 		else {

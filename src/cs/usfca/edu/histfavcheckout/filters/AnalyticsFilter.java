@@ -23,6 +23,7 @@ import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
 public class AnalyticsFilter implements Filter {
 	private static final String SERVICE_NAME = "HIST-FAV-CHECKOUT";
 	private static final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+	private APIClient apiClient = new APIClient();
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -39,7 +40,7 @@ public class AnalyticsFilter implements Filter {
 						System.currentTimeMillis() - timestamp, String.valueOf(res.getStatus()), SERVICE_NAME,
 						success, String.valueOf(timestamp), "");
 				try {
-					boolean success = APIClient.sendEDR(edrRequest);
+					boolean success = apiClient.sendEDR(edrRequest);
 					if(!success) {
 						LoggerHelper.makeInfoLog("POST /saveEDR --> " + "EDR Event responded with responseCode: " + res.getStatus());
 					}

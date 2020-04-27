@@ -2,6 +2,9 @@ package cs.usfca.edu.histfavcheckout.model;
 
 import java.util.List;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+
 public class SearchMoviesResponse {
 	
 	private List<MovieData> results;
@@ -25,7 +28,8 @@ public class SearchMoviesResponse {
 	public MovieData newMovieData() {
 		return new MovieData();
 	}
-
+	
+	@RedisHash(value = "MovieData", timeToLive = 300)
 	public static class MovieData{
 		private String Title;
 		private String Studio;
@@ -34,6 +38,7 @@ public class SearchMoviesResponse {
 		private String Year;
 		private String Genre;
 		private String Upc;
+		@Id
 		private int ID;
 		
 		public String getTitle() {

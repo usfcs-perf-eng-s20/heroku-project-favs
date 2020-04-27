@@ -5,47 +5,100 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 
 import cs.usfca.edu.histfavcheckout.model.AuthResponse;
 import cs.usfca.edu.histfavcheckout.model.EDRRequest;
+import cs.usfca.edu.histfavcheckout.model.MovieInfoCacheRepository;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
 import cs.usfca.edu.histfavcheckout.model.UserInfoResponse;
 import cs.usfca.edu.histfavcheckout.utils.Config;
 
+@Component
 public class APIClient {
-
+	
+	@Autowired
+	private MovieInfoCacheRepository movieRepository;
+	
 	private static Request request = new Request();
 	private static Gson gson = new Gson();
 
-	public static SearchMoviesResponse getAllMovies(Set<Integer> movies) {
+	public SearchMoviesResponse getAllMovies(Set<Integer> movies) {
 		if(!Config.config.getUseSearchAPIs()) {
 			SearchMoviesResponse resp = new SearchMoviesResponse();
-			resp.setSuccess(true);
 			resp.setResults(Collections.nCopies(movies.size(), mockMovie(movies.iterator().next())));
 			return resp;
 		}
-		URL url = request.url(Config.config.getSearchMoviesURL() + generateRequestList(movies));
+		LinkedHashMap<Integer, SearchMoviesResponse.MovieData> cachedMovies = new LinkedHashMap<Integer, SearchMoviesResponse.MovieData>();
+		movieRepository.findAllById(movies).forEach((movie) -> {
+			cachedMovies.put(movie.getID(), movie);
+		});
+		if(movies.size() == cachedMovies.size()) {
+			SearchMoviesResponse resp = new SearchMoviesResponse();
+			resp.setResults(new LinkedList<MovieData>(cachedMovies.values()));
+			return resp;
+		}
+		Set<Integer> restOfMovies = new HashSet<Integer>();
+		for(Integer i : movies) {
+			if(!cachedMovies.containsKey(i)) {
+				restOfMovies.add(i);
+			}
+		}
+		URL url = request.url(Config.config.getSearchMoviesURL() + generateRequestList(restOfMovies));
 		HttpURLConnection con = request.connect(url, "GET");
 		String response = request.getResponse(con);
 		if (response != null) {
 			SearchMoviesResponse resp = gson.fromJson(response.toString(), SearchMoviesResponse.class);
-			if(resp.getResults() != null) {
+			if(resp != null && resp.getResults() != null) {
+				List<SearchMoviesResponse.MovieData> result = resp.getResults();
+				LinkedHashMap<Integer, SearchMoviesResponse.MovieData> receivedMovies = new LinkedHashMap<Integer, SearchMoviesResponse.MovieData>();
+				for(SearchMoviesResponse.MovieData movieData : resp.getResults()) {
+					receivedMovies.put(movieData.getID(), movieData);
+				}
+				movieRepository.saveAll(receivedMovies.values());
+				resp.setResults(curateMovieResponse(movies, cachedMovies, receivedMovies));
 				return resp;
+			}
+			else if(!cachedMovies.isEmpty()) {
+				SearchMoviesResponse res = new SearchMoviesResponse();
+				res.setResults(new LinkedList<MovieData>(cachedMovies.values()));
+				return res;
 			}
 		}
 		con.disconnect();
 		return null;
 	}
+	
+	private List<SearchMoviesResponse.MovieData> curateMovieResponse(Set<Integer> movies, 
+			LinkedHashMap<Integer, SearchMoviesResponse.MovieData> cachedMovies, 
+			LinkedHashMap<Integer, SearchMoviesResponse.MovieData> receivedMovies) {
+		List<SearchMoviesResponse.MovieData> res = new LinkedList<SearchMoviesResponse.MovieData>();
+		for(Integer i : movies) {
+			if(cachedMovies.getOrDefault(i, null) != null) {
+				res.add(cachedMovies.get(i));
+			}
+			else if(receivedMovies.getOrDefault(i, null) != null) {
+				res.add(receivedMovies.get(i));
+			}
+		}
+		System.out.println("Movies size: " + movies.size() + " CachedSize: " + cachedMovies.size() + " Received Movies: " + receivedMovies.size());
+		return res;
+	}
 
-	public static List<UserInfoResponse.UserInfo> getTopUsers(Set<Integer> userIds) {
+	public List<UserInfoResponse.UserInfo> getTopUsers(Set<Integer> userIds) {
 		if(!Config.config.getUseLoginAPIs()) {
 			return mockUsers(userIds);
 		}
@@ -60,7 +113,7 @@ public class APIClient {
 		return null;
 	}
 
-	public static String generateRequestList(Set<Integer> ids) {
+	public String generateRequestList(Set<Integer> ids) {
 		StringBuilder result = new StringBuilder();
 		if(!ids.isEmpty()) {
 			List<Integer> list = new ArrayList<>();
@@ -75,7 +128,7 @@ public class APIClient {
 		return result.toString();
 	}
 
-	public static boolean isAuthenticated(int userId) throws IOException {
+	public boolean isAuthenticated(int userId) throws IOException {
 		if(!Config.config.getUseLoginAPIs()) {
 			return true;
 		}
@@ -91,7 +144,7 @@ public class APIClient {
 		return false;
 	}
 
-	public static boolean sendEDR(EDRRequest edrRequest) throws IOException {
+	public boolean sendEDR(EDRRequest edrRequest) throws IOException {
 		if(!Config.config.getUseAnalyticsAPIs()) {
 			return true;
 		}
@@ -103,7 +156,7 @@ public class APIClient {
 		return responseCode == HttpURLConnection.HTTP_OK;
 	}
 
-	private static MovieData mockMovie(int validMovieID) {
+	private MovieData mockMovie(int validMovieID) {
 		final MovieData m = new MovieData();
 		m.setID(validMovieID);
 		m.setGenre("Action");
@@ -116,7 +169,7 @@ public class APIClient {
 		return m;
 	}
 
-	private static List<UserInfoResponse.UserInfo> mockUsers(Set<Integer> userIds) {
+	private List<UserInfoResponse.UserInfo> mockUsers(Set<Integer> userIds) {
 		List<UserInfoResponse.UserInfo> users = new LinkedList<UserInfoResponse.UserInfo>();
 		for(int i : userIds) {
 			UserInfoResponse.UserInfo user = new UserInfoResponse.UserInfo(i, "MockName", "mock@email.com");
