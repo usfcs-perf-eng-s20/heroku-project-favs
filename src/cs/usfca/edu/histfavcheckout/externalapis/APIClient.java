@@ -24,14 +24,20 @@ import cs.usfca.edu.histfavcheckout.model.EDRRequest;
 import cs.usfca.edu.histfavcheckout.model.MovieInfoCacheRepository;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse;
 import cs.usfca.edu.histfavcheckout.model.SearchMoviesResponse.MovieData;
+import cs.usfca.edu.histfavcheckout.model.UserInfoCacheRepository;
 import cs.usfca.edu.histfavcheckout.model.UserInfoResponse;
 import cs.usfca.edu.histfavcheckout.utils.Config;
+import cs.usfca.edu.histfavcheckout.utils.LoggerHelper;
+import cs.usfca.edu.histfavcheckout.utils.RedisConfig;
+import redis.clients.jedis.Jedis;
 
 @Component
 public class APIClient {
 	
 	@Autowired
 	private MovieInfoCacheRepository movieRepository;
+	@Autowired
+	private UserInfoCacheRepository userRepository;
 	
 	private static Request request = new Request();
 	private static Gson gson = new Gson();
@@ -102,17 +108,62 @@ public class APIClient {
 		if(!Config.config.getUseLoginAPIs()) {
 			return mockUsers(userIds);
 		}
-		URL url = request.url(Config.config.getUserInfoURL() + generateRequestList(userIds));
+		LinkedHashMap<Integer, UserInfoResponse.UserInfo> cachedUsers = new LinkedHashMap<Integer, UserInfoResponse.UserInfo>();
+		userRepository.findAllById(userIds).forEach((user) -> {
+			cachedUsers.put(user.getUserId(), user);
+		});
+		if(userIds.size() == cachedUsers.size()) {
+			LoggerHelper.makeInfoLog("All users found in cache. Cache Size " + cachedUsers.size());
+			return new LinkedList<>(cachedUsers.values());
+		}
+		Set<Integer> uncachedUsers = new HashSet<Integer>();
+		for(Integer i : userIds) {
+			if(!cachedUsers.containsKey(i)) {
+				uncachedUsers.add(i);
+			}
+		}
+		URL url = request.url(Config.config.getUserInfoURL() + generateRequestList(uncachedUsers));
 		HttpURLConnection con = request.connect(url, "GET");
 		String response = request.getResponse(con);
 		if (response != null) {
 			UserInfoResponse users = gson.fromJson(response.toString(), UserInfoResponse.class);
-			return users.getUsers();
+			userRepository.saveAll(users.getUsers());
+			if(cachedUsers.size() == 0) {
+				LoggerHelper.makeInfoLog("Cache is empty. No need to combine with cache.");
+				return users.getUsers();
+			}
+			else {
+				LinkedHashMap<Integer, UserInfoResponse.UserInfo> receivedUsers = new LinkedHashMap<Integer, UserInfoResponse.UserInfo>();
+				for(UserInfoResponse.UserInfo user : users.getUsers()) {
+					receivedUsers.put(user.getUserId(), user);
+				}
+				return curateUserResponse(userIds, cachedUsers, receivedUsers);
+			}
+		}
+		else if(!cachedUsers.isEmpty()) {
+			LoggerHelper.makeInfoLog("No response from userAPI so returning cached users");
+			return new LinkedList<>(cachedUsers.values());
 		}
 		con.disconnect();
 		return null;
 	}
 
+	private List<UserInfoResponse.UserInfo> curateUserResponse(Set<Integer> users, 
+			LinkedHashMap<Integer, UserInfoResponse.UserInfo> cachedUsers, 
+			LinkedHashMap<Integer, UserInfoResponse.UserInfo> receivedUsers) {
+		List<UserInfoResponse.UserInfo> res = new LinkedList<UserInfoResponse.UserInfo>();
+		for(Integer i : users) {
+			if(cachedUsers.getOrDefault(i, null) != null) {
+				res.add(cachedUsers.get(i));
+			}
+			else if(receivedUsers.getOrDefault(i, null) != null) {
+				res.add(receivedUsers.get(i));
+			}
+		}
+		System.out.println("Users size: " + users.size() + " CachedSize: " + cachedUsers.size() + " Received Users: " + receivedUsers.size());
+		return res;
+	}
+	
 	public String generateRequestList(Set<Integer> ids) {
 		StringBuilder result = new StringBuilder();
 		if(!ids.isEmpty()) {

@@ -2,6 +2,9 @@ package cs.usfca.edu.histfavcheckout.model;
 
 import java.util.List;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+
 public class UserInfoResponse {
 	private List<UserInfo> users;
 	
@@ -17,7 +20,9 @@ public class UserInfoResponse {
 		return new UserInfo();
 	}
 	
+	@RedisHash(value = "UserInfoData", timeToLive = 300)
 	public static class UserInfo {
+		@Id
 		private int userId;
 		private String userName;
 		private String email;
